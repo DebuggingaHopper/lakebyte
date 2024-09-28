@@ -23,7 +23,7 @@ const Home: NextPage<Props> = ({ posts }: Props) => {
                 {post.title}
               </Link>
             </h2>
-            <h4 className="text-0.2 font-bold mb-0.5">
+            <h4 className="text-0.2 font-bold mb-0.5 text-gray-400">
                 {post.date}
             </h4>
 
