@@ -18,11 +18,14 @@ const Home: NextPage<Props> = ({ posts }: Props) => {
       <div className="space-y-12">
         {posts.map((post) => (
           <div key={post.slug}>
-            <h2 className="text-2xl font-bold mb-4">
+            <h2 className="border-primary border w-full px-3 py-2 text-2xl font-semibold rounded-full hover:bg-primary hover:text-teal-400 transition-all duration-300 ease-in-out">
               <Link href={`/posts/${post.slug}`}>
                 {post.title}
               </Link>
             </h2>
+            <h4 className="text-0.2 font-bold mb-0.5">
+                {post.date}
+            </h4>
 
             <p>{post.description}</p>
           </div>

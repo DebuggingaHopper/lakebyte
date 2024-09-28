@@ -44,7 +44,7 @@ const PostPage: React.FC<Props> = ({ source, frontMatter }: Props) => {
         <div>
 
             <article className="prose prose-green">
-                <div className="mb-4">
+                <div className="mb-4  ">
                     <Thumbnail title={frontMatter.title} src={frontMatter.thumbnail} />
                 </div>
 
