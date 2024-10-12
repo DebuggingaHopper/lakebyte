@@ -11,13 +11,13 @@ import { IconButton } from "@radix-ui/themes";
 const Header: React.FC = () => {
   return (
     // header value
-    <div className="w-full flex-nowrap bg-white sticky top-0">
+    <div className="w-full flex-nowrap bg-transparent">
       <header className="py-2">
         <Link
           href="/"
-          className="text-2xl font-bold text-green-500 text-center"
+          className="text-2xl font-bold text-HeaderText text-center"
         >
-          LakeByte
+          @ECHO D@H
         </Link>
         <div className="space-x-3">
           <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189">

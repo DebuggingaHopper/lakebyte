@@ -21,6 +21,7 @@ const Thumbnail: React.FC<Props> = ({ title, src, slug}: Props) => {
         width={1280}
         src={src}
         alt={`Thumbnail cover image ${title}`}
+        className="object-scale-down max-h-full drop-shadow-md rounded-md m-auto"
         />
     );
 

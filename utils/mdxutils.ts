@@ -3,6 +3,7 @@ import {join} from 'path';
 import fs from 'fs';
 import { verify } from 'crypto';
 
+export const postsPerPage = 5 as const;
 // structure of items
 type Items =  {
     // each post has a parameter key that takes the value of a string
@@ -82,3 +83,24 @@ export function getAllPosts(fields: string[]): Items []{
     // return the available post
     return posts;
 }
+
+
+export async function getPaginatedPosts({
+    page,
+    limit,
+  }: {
+    page: number;
+    limit: number;
+  }, fields: string[]): Promise<{ posts: Items[]; total: number }>{
+    // add paths for getting all posts 
+    const filePaths = getPostsFilePaths();
+    // get the posts from the filepaths with the needed fields sorted by date
+    const allPosts = filePaths.map((filePath) => getPostItems(filePath,fields)).sort((post1,post2) => post1.date > post2.date ? 1 : -1);
+    const paginatedPosts = allPosts.slice((page - 1) * limit, page * limit);
+    // return the available post
+    return {
+        posts: paginatedPosts,
+        total: allPosts.length,
+      };
+}
+
