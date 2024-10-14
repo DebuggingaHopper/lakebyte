@@ -19,23 +19,6 @@ const Header: React.FC = () => {
         >
           @ECHO D@H
         </Link>
-        <div className="space-x-3">
-          <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189">
-            <IconButton>
-              <LinkedInLogoIcon width="26" height="26" />
-            </IconButton>
-          </a>
-          <a href="https://github.com/DebuggingaHopper">
-            <IconButton>
-              <GitHubLogoIcon width="26" height="26" />
-            </IconButton>
-          </a>
-          <a href="mailto:“nelson.j.alvarez01@gmail.com">
-            <IconButton>
-              <EnvelopeOpenIcon width="26" height="26" />
-            </IconButton>
-          </a>
-        </div>
       </header>
     </div>
   );
