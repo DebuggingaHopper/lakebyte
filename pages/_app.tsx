@@ -12,9 +12,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             <div className="max-w-prose mx-auto px-4 sticky top-0 backdrop-blur-sm fixed overflow-auto">
                 <Header />
             </div>
-            <div className="bg-BackgroundColor">
             <Component {...pageProps} />
-            </div>
         </Layout>
         
     </MdxComponentsProvider>
