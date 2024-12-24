@@ -7,25 +7,28 @@ import {
   import { IconButton } from "@radix-ui/themes";
 const Sidebar: React.FC = () => {
   return (
-    <div className="min-h-screen px-4 pt-8 pb-0 bg-[#003a51] flex justify-between flex-col w-32">
+    <div className="min-h-screen px-4 pt-8 pb-0 bg-[#003a51] flex justify-between flex-col w-60">
 
-<div className="space-x-3 h-full flex items-center justify-center items-stretch fixed">
-          <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189">
+<div className="space-y-3 h-full flex items-center flex-col p-3 justify-center items-stretch fixed">
+          <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189" className="text-[#ffffff]">
             <IconButton>
-              <LinkedInLogoIcon width="16" height="16" />
+              <LinkedInLogoIcon width="40" height="40" />
             </IconButton>
+              LinkedIn
           </a>
 
-          <a href="https://github.com/DebuggingaHopper">
+          <a href="https://github.com/DebuggingaHopper" className="text-[#ffffff]">
             <IconButton>
-              <GitHubLogoIcon width="16" height="16" />
+              <GitHubLogoIcon width="40" height="40" />
             </IconButton>
+              Github
           </a>
 
-          <a href="mailto:“nelson.j.alvarez01@gmail.com">
+          <a href="mailto:“nelson.j.alvarez01@gmail.com" className="text-[#ffffff]">
             <IconButton>
-              <EnvelopeOpenIcon width="16" height="16" />
+              <EnvelopeOpenIcon width="40" height="40" />
             </IconButton>
+              Email
           </a>
         </div>
     </div>
