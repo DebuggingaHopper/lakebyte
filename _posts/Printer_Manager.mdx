@@ -1,20 +1,17 @@
 ---
 date: '2024-09-24'
 thumbnail: /assets/getting-started.jpg
-title: Creating an application for printer troubleshooting (wow so innovative)
-description: Discussing the process of creating a software that troubleshoots a printer for the user
-prerequisites: ['None']
-stacks: ['Git','C#','prnport']
+title: Creating a printer troubleshooter (wow so innovative)
+description: Discussing the creation of a software that troubleshoots a printer for niche issues
 ---
-
-<Prerequisites />
-<Stacks />
 
 <h1 align="center">Introduction</h1>
 
 Imagine getting over 20 calls in a month about a printer giving a problem, the issues always tend to be the same:
     - The printer queue is jammed
     - The IP of the printer changed so the port needs to be reconfigured
+	
+
 The amount of time it takes to log in to remote into the device to fix the printer always takes from 2 minutes to 15 minutes.
 
 Through a C# .Net Application that utilizes two libraries [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) this issue was able to be removed. Allowing the client to just continue with their day without needing to make a call, no news is good news (most of the time).

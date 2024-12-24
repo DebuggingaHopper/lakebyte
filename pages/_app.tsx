@@ -6,16 +6,20 @@ import Header from '@/components/Header';
 
 function MyApp({ Component, pageProps }: AppProps) {
     return (
+    <div className="bg-BackgroundColor"> 
     <MdxComponentsProvider>
-        <div className="bg-BackgroundColor">
         <Layout>
             <div className="max-w-prose mx-auto px-4 sticky top-0 backdrop-blur-sm fixed overflow-auto">
                 <Header />
             </div>
+            <div className="bg-BackgroundColor">
             <Component {...pageProps} />
+            </div>
         </Layout>
-        </div>
-    </MdxComponentsProvider>)
+        
+    </MdxComponentsProvider>
+    </div>
+    )
 }
 
 export default MyApp

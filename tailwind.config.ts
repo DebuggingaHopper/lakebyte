@@ -9,7 +9,7 @@ module.exports = {
       'HeaderText': '#171A1B',
       'Description': '#48525d ',
       'Date': '#5a6775',
-      'Title': '#121517 '
+      'Title': '#253646 '
     },
     extend: {},
   },
