@@ -4,7 +4,7 @@ module.exports = {
   variants: {},
   theme: {
     colors: {
-      'background':'#b3cee9',
+      'BackgroundColor':`#f0eadc`,
       'TitleText':`#121517`,
       'HeaderText': '#171A1B',
       'Description': '#48525d ',

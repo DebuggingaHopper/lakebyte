@@ -22,7 +22,7 @@ const Home: NextPage<Props> = ({ posts }: Props) => {
         <meta name="author" content="DebuggingaHopper" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
-      <div>
+      <div className="bg-BackgroundColor">
 
         <h1 className="text-4xl font-bold mb-4 text-slate-200 text-TitleText">
           Technical Articles
@@ -31,7 +31,7 @@ const Home: NextPage<Props> = ({ posts }: Props) => {
         <div className="space-y-12">
           {posts.map((post) => (
             <div key={post.slug}>
-              <h2 className="px-3 py-2 text-2xl font-semibold  hover:bg-primary hover:text-[#e1ebf6] transition-all duration-300 ease-in-out text-slate-200 text-Title">
+              <h2 className="px-3 py-2 text-2xl font-semibold  hover:bg-primary hover:text-[#ffffff] transition-all duration-300 ease-in-out text-slate-200 text-Title">
                 <Link href={`/posts/${post.slug}`}>{post.title}</Link>
               </h2>
               <h4 className="text-0.2 text-Date">{post.date}</h4>

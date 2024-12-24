@@ -7,9 +7,8 @@ import {
   import { IconButton } from "@radix-ui/themes";
 const Sidebar: React.FC = () => {
   return (
-    <div className="h-screen px-4 pt-8 pb-0  bg-transparent flex justify-between flex-col border border-dashed w-80">
-      <div>
-      <div className="space-x-3 h-screen flex items-center justify-center">
+    <div className="h-screen px-4 pt-8 pb-0 bg-transparent flex justify-between flex-col w-80">
+      <div className="space-x-3 h-full flex items-center justify-center items-stretch fixed">
           <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189">
             <IconButton>
               <LinkedInLogoIcon width="52" height="52" />
@@ -26,7 +25,6 @@ const Sidebar: React.FC = () => {
             </IconButton>
           </a>
         </div>
-      </div>
     </div>
   );
 };

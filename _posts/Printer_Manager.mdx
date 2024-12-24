@@ -1,0 +1,45 @@
+---
+date: '2024-09-24'
+thumbnail: /assets/getting-started.jpg
+title: Creating an application for printer troubleshooting (wow so innovative)
+description: Discussing the process of creating a software that troubleshoots a printer for the user
+prerequisites: ['None']
+stacks: ['Git','C#','prnport']
+---
+
+<Prerequisites />
+<Stacks />
+
+<h1 align="center">Introduction</h1>
+
+Imagine getting over 20 calls in a month about a printer giving a problem, the issues always tend to be the same:
+    - The printer queue is jammed
+    - The IP of the printer changed so the port needs to be reconfigured
+The amount of time it takes to log in to remote into the device to fix the printer always takes from 2 minutes to 15 minutes.
+
+Through a C# .Net Application that utilizes two libraries [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) this issue was able to be removed. Allowing the client to just continue with their day without needing to make a call, no news is good news (most of the time).
+
+
+<h2 align="center">Clearing the queue</h2>
+
+To resolve the issue on the printer, we would need to clear its queue. Well, a simple Google search can display that through a [batch file](https://community.spiceworks.com/t/clearing-print-cache-using-a-batch-file/1004358) the print spooler can be restarted, alongside clearing the queue. This is a good start as this is something the user won't see, but how is the user supposed to know the job is finished?
+
+[Printing a test page](https://stackoverflow.com/questions/58744651/i-need-a-batch-file-which-can-start-print-test-page-from-default-printer) is the perfect way to show the user the job is done. Now of course we would need to create a config file for this application that takes the printer name, as we only need to do this for one printer.
+
+so we have a batch script like the following
+```bat
+for /F "tokens=3 delims=: " %%H in ('sc query 'Spooler" ^| findstr "STATE"') DO (
+	if /I "$%%H" NEQ "STOPPED" (
+		net stop spooler
+		del %systemroot%\System32\spool\printers\* /Q
+		net start Spooler
+	)
+	if /I "$%%H" NEQ "RUNNING" (
+		net start spooler
+		net stop spooler
+		del %systemroot%\System32\spool\printers\* /Q
+		net start Spooler
+	)
+)
+rundll32 printui.dll, PrintUIEntry /k /n %1
+```
