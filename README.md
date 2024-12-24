@@ -1,40 +1,28 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Developer Journal
 
-## Getting Started
 
-First, run the development server:
+I wanted to revisit the site with an actual purpose as the last time it was worked on there was no objective. This time it will be be properly built with an actual article and appealing color scheme fitting my design.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Bugs
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+### SideBar and site color
+Well one of the annoying parts was about the sidebar and backjground color not populating fully, I found out it was because of [this](https://stackoverflow.com/questions/66025707/how-do-you-set-a-full-page-background-color-in-tailwind-css)
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+### Markdwon Color
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+Because when i first made this I didn't know what I was working with, it didn't dawn on me to utilize [prose](https://github.com/tailwindlabs/tailwindcss-typography), and understanding how it works. I was so stumped why I couldn't change the default color but then it dawned on me when I read this [post](https://tjaddison.com/blog/2020/08/updating-to-tailwind-typography-to-style-markdown-posts/)
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Color Scheme
 
-## Learn More
+So Something I struglled originally was the color scheme for the website, I came to the conclusion to utilize the Tufted titnouse as displayed below as my reference:
 
-To learn more about Next.js, take a look at the following resources:
+![Tifted_titmouse](README-IMAGES/bird.png)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This led me to utilize the following [pallette](https://coolors.co/palette/314d59-f0eadc-bbb9ad-60797d-585858) as my reference for the page
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+Hpowever after tetsing the color scheme, and helwp with the lil 8 year old we determined it was better to go for a darker scheme, which led to this [color scheme](https://www.color-hex.com/color-palette/21810) based on the Boat Tailed **Grackle**
 
-## Deploy on Vercel
+So
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.

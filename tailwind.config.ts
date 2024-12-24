@@ -2,16 +2,43 @@ module.exports = {
   plugins: [require('@tailwindcss/typography')],
   purge: ['./components/**/*.tsx', './pages/**/*.tsx'],
   variants: {},
+  
   theme: {
     colors: {
-      'BackgroundColor':`#f0eadc`,
-      'TitleText':`#121517`,
-      'HeaderText': '#171A1B',
-      'Description': '#48525d ',
-      'Date': '#5a6775',
-      'Title': '#253646 '
+      'BackgroundColor':`#131b22`,
+      'TitleText':`#fff6a2`,
+      'HeaderText': '#fff6a2',
+      'Description': '#e9ecef',
+      'Date': '#c0becd',
+      'Title': '#ffffff'
     },
-    extend: {},
+    extend: {
+        typography: {
+          DEFAULT: { // this is for prose class
+            css: {
+              p: {
+                color: '#ffffff',
+              },
+              h1:{
+                color: '#ffffff'
+              },
+              h2:{
+                color: '#ffffff'
+              },
+              h3:{
+                color: '#ffffff'
+              },
+              h4:{
+                color: '#ffffff'
+              },
+              li:{
+                color: '#ffffff'
+              }
+            },
+          },
+        },
+      }  
   },
+  
   darkMode: false, 
 };

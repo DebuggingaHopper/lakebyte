@@ -25,9 +25,3 @@ body {
     text-wrap: balance;
   }
 }
-
-@layer base {
-  html {
-    background-color: #f0eadc;
-  }
-}

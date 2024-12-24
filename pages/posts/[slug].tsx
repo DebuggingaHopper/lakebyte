@@ -50,7 +50,7 @@ const PostPage: React.FC<Props> = ({ source, frontMatter }: Props) => {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
       <div>
-        <article className="prose prose-green">
+        <article className="prose prose-headings:text-white prose-a:text-white-600 prose-green ">
           <div className="mb-4  ">
             <Thumbnail title={frontMatter.title} src={frontMatter.thumbnail} />
           </div>
