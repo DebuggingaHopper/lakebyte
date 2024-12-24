@@ -22,7 +22,7 @@ const Home: NextPage<Props> = ({ posts }: Props) => {
         <meta name="author" content="DebuggingaHopper" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>
-      <div className="bg-BackgroundColor">
+      <div>
 
         <h1 className="text-4xl font-bold mb-4 text-slate-200 text-TitleText">
           Technical Articles

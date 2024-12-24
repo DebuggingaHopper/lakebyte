@@ -7,7 +7,7 @@ const Layout: React.FC<Props> = ({ children }: Props) => {
     <>
       <div className="flex justify-start">
         <Sidebar />
-        <div className="max-w-prose mx-auto px-4 h-screen bg-transparent">
+        <div className="max-w-prose mx-auto px-4 min-h-screen bg-BackgroundColor">
           <main className="pt-4 pb-12">{children}</main>
         </div>
       </div>

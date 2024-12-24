@@ -7,8 +7,8 @@ import {
   import { IconButton } from "@radix-ui/themes";
 const Sidebar: React.FC = () => {
   return (
-    <div className="h-screen px-4 pt-8 pb-0 bg-[#314d59] flex justify-between flex-col w-80">
-      <div className="space-x-3 h-full flex items-center justify-center items-stretch fixed bg-[#314d59]">
+    <div className="h-screen px-4 pt-8 pb-0 bg-[#314d59] flex justify-between flex-col w-60 overflow-y-auto">
+      <nav className="space-x-3 h-full flex items-center justify-center items-stretch fixed">
           <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189">
             <IconButton>
               <LinkedInLogoIcon width="52" height="52" />
@@ -24,7 +24,7 @@ const Sidebar: React.FC = () => {
               <EnvelopeOpenIcon width="52" height="52" />
             </IconButton>
           </a>
-        </div>
+        </nav>
     </div>
   );
 };
