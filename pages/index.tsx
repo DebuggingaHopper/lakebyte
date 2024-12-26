@@ -32,7 +32,7 @@ const Home: NextPage<Props> = ({ posts }: Props) => {
           {posts.map((post) => (
             <div key={post.slug}>
               <h2 className="px-3 py-2 text-2xl font-semibold transition-all duration-300 ease-in-out text-slate-200 underline text-Title">
-                <Link href={`/posts/${post.slug}`} >{post.title}</Link>
+                <Link href={`/posts/${post.slug}`} className="hover:text-[#fff6a2]">{post.title}</Link>
               </h2>
               <h4 className="text-0.2 text-Date">🗓️{post.date}</h4>
 
