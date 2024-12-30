@@ -2,7 +2,7 @@
 date: '2024-09-24'
 thumbnail: /assets/getting-started.jpg
 title: Creating a printer troubleshooter (wow so innovative)
-description: Discussing the creation of software that troubleshoots a printer for niche issues
+description: Discussing Part 1 of  the creation of software that troubleshoots a printer for niche issues
 ---
 
 <h1 align="center">Introduction</h1>
@@ -19,18 +19,22 @@ Initially, the issue could have been solved through a batch script but after tak
 Through a C# .Net Application that utilizes two libraries [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) this issue was able to be removed. Allowing the client to just continue with their day without needing to make a call, no news is good news (most of the time).
 
 
-<h2 align="center">The Printer Troubleshooter</h2>
 
-In this section, we will highlight every aspect of the printer troubleshooter. 
 
-<h3 align="center">What information do we need?</h3>
+<h2 align="center">Part 1 of The Printer Troubleshooter</h2>
 
-Before even making this program there were four questions I needed to answer:
+In this article we will detail the main components that create the first version of the printer troubleshooter. This will not include any mention of prnport or the installer mentioned that helps with configruing the executables config file.
 
-1. What is the problem to solve? - Jammed Printer Queue
+<h3 align="center">Background Info</h3>
+
+Before even making this program there were some questions I needed to answer:
+
+1. What is the problem to solve? - Jammed Printer Queue, and IP of the printer changes causing incongruincey with the port
 2. Who are the end-users? - Individuals who most commonly do not have much experience with computers
-3. Who will see the program files - IT teams monitoring troubleshoots
+3. Who will see the program files - IT teams monitoring the devices this executable is installed on
 4. What will be needed as input? - The user should not provide any input, all the necessary input is taken from the config file
+5. What platform is this for? - The PC models have .NET 4.7 & 4.8 installd respectively so for this to work we have to make a version for each
+
 
 <h3 align="center">The Config file</h3>
 
@@ -40,6 +44,15 @@ Before diving into the code, the config file mentioned in the previous section c
 
 The config file would look like the following:
 ``` XML
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+	<startup>
+		<supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7"/>
+	</startup>
+	<appSettings>
+		<add key="PrinterName" value="PDFPrinter"/>
+	</appSettings>
+</Configuration>
 ```
 
 Now that we got that little thing out of the way let's jump into it.
@@ -84,15 +97,37 @@ This was where the perspective shifted a bit, we would like to do some practices
 
 
 As we have the config file we also want to use those values, You'll see some code referencing two variables which are the temporary location the file will go to, and the resource name we want to load
-```C#
+```c#
+		[DllImport("User32.dll", CharSet = CharSet.Unicode)]
+        readonly static LQMSplash ms_frmSplash = null;
+        readonly string resourceName = "LoccioniQueueManager.ClearQ.bat";
+        readonly string temp_path = System.IO.Path.GetTempPath() + "\\LQM.bat";
+        readonly string Printer = ConfigurationManager.AppSettings["PrinterName"];
 ```
 
 The following lines load the assembly, create the file temporarily, run the necessary work, and then delete the file.
-```C#
+```c#
+			var assembly = Assembly.GetExecutingAssembly();
+            using (Stream input = assembly.GetManifestResourceStream(resourceName))
+            using (Stream output = File.Create(temp_path))
+            {
+                CopyStream(input, output);
+            }
+            ExecuteCommand(temp_path, Printer);
+            File.Delete(temp_path);
 ```
 
 The CopyStream method referenced is the following which writes what was provided to the output.
-```C#
+```c#
+        public void CopyStream(Stream input, Stream output)
+        {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
+        }
 ```
 
 Perfect we found a way to embed the batch file and run it, but wait how are we running it, what is this ExecuteCommand function?
@@ -104,6 +139,25 @@ The core solution to the printer issue is resolved by running the batch file but
 
 Through processes, we create a new process which will be cmd.exe running the batch file with the only parameter being the printer name.
 ```C#
+        public void ExecuteCommand(string command, string printerName)
+        {
+
+
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command + " " + "\"" + printerName + "\"")
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+
+            };
+            var process = Process.Start(processInfo);
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+            process.Close();
+        }
 ```
 
 Through this API library, we can use the temporary batch file and run it without the user needing to see any command line terminal which is perfect.
@@ -115,15 +169,28 @@ This is where a splash screen comes into play.
 
 <h3 align="center">The splash screen</h3>
 
-Honestly, the code to run the splash screen is not difficult, all we are doing is running it in its thread so it shows for 7 seconds and then after those 7 seconds, we create the script, run it, and then delete it.
-```C#
+Honestly, the code to run the splash screen is not difficult, all we are doing is running it in its thread so it shows for 7 seconds and then after those 7 seconds, we create the script, run it, and then delete it. This code would be in the same location  but before where the assmebly is loaded and creates the temporary bat file.
+```c#
+ if (ms_frmSplash != null)
+                return;
+            Thread ms_oThread = new Thread(new ThreadStart(StartForm));
+            ms_oThread.Start();
+            System.Threading.Thread.Sleep(7000);
+            ms_oThread.Abort();
 ```
 
 Even the function StartForm is just creating a new instance of the SplashScreen object and having the application run it.
-```C#
+```c#
+        private void StartForm()
+        {
+            LQMSplash ms_frmSplash = new LQMSplash();
+            Application.Run(ms_frmSplash);
+        }
 ```
 
-The difficult part about the splash screen was creating the actual design, but thanks to Figma and the understanding of the ideal [splash screen sizes](https://stackoverflow.com/questions/605965/standard-sizes-for-windows-splash-screens) I was able to create the following design:
+The difficult part about the splash screen was creating the actual design, but thanks to Figma and the understanding of the ideal [splash screen sizes](https://stackoverflow.com/questions/605965/standard-sizes-for-windows-splash-screens) I was able to create a decent design
+
+<figure> <center> <img src="/assets/SplashScreen.PNG" alt="SPLASH_SCREEN" width="300" height="300" /> <figcaption> Splash Screen designed in figma</figcaption> </center></figure>
 
 
 It achieved the main goal of telling the user exactly what to do without too much information, as the whole point of this executable is to minimize the amount of user input.
@@ -140,6 +207,87 @@ I prefer the first as that is the more secure method but the second works as wel
 
 So with all this, I was able to create a simple program that looked like the following:
 ```
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+namespace LoccioniQueueManager
+{
+    internal class Execute
+    {
+        [DllImport("User32.dll", CharSet = CharSet.Unicode)]
+        public static extern int MessageBox(IntPtr h, string m, string c, int type);
+        readonly static LQMSplash ms_frmSplash = null;
+        readonly string resourceName = "LoccioniQueueManager.ClearQ.bat";
+        readonly string temp_path = System.IO.Path.GetTempPath() + "\\LQM.bat";
+        readonly string Printer = ConfigurationManager.AppSettings["PrinterName"];
+
+        public void ExecuteMain()
+        {
+            if (ms_frmSplash != null)
+                return;
+            Thread ms_oThread = new Thread(new ThreadStart(StartForm));
+            ms_oThread.Start();
+            System.Threading.Thread.Sleep(7000);
+            ms_oThread.Abort();
+            
+            var assembly = Assembly.GetExecutingAssembly();
+            using (Stream input = assembly.GetManifestResourceStream(resourceName))
+            using (Stream output = File.Create(temp_path))
+            {
+                CopyStream(input, output);
+            }
+            ExecuteCommand(temp_path, Printer);
+            File.Delete(temp_path);
+        }
+        
+        public void ExecuteCommand(string command, string printerName)
+        {
+
+
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command + " " + "\"" + printerName + "\"")
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+
+            };
+            var process = Process.Start(processInfo);
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+            process.Close();
+        }
+
+        public void CopyStream(Stream input, Stream output)
+        {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
+        }
+
+        private void StartForm()
+        {
+            LQMSplash ms_frmSplash = new LQMSplash();
+            Application.Run(ms_frmSplash);
+        }
+    }
+}
 ```
 
 When the program is installed by our team, the printer name will have the desired value so when the program is running it will show the splash screen and you will then get a test page!
