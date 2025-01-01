@@ -23,7 +23,10 @@ Through a C# .Net Application that utilizes two libraries [Processes](https://le
 
 <h2 align="center">Part 1 of The Printer Troubleshooter</h2>
 
-In this article we will detail the main components that create the first version of the printer troubleshooter. This will not include any mention of prnport or the installer mentioned that helps with configruing the executables config file.
+In this article we will detail the main components that create the first version of the printer troubleshooter:
+- execute class - dissassembles and executes a batch file
+- userPrinter class - the class for the printer being communicated with
+This will not include any mention of prnport or the installer mentioned that helps with configruing the executables config file.
 
 <h3 align="center">Background Info</h3>
 
@@ -95,26 +98,42 @@ It's not hard to achieve it.
 
 This was where the perspective shifted a bit, we would like to do some practices that would prevent the program from being seen as an issue by an IT department and make this program still rely on 0 user input.
 
+So first we create the execute class which will consist of the batch resource name, and temporary file path
+
 
 As we have the config file we also want to use those values, You'll see some code referencing two variables which are the temporary location the file will go to, and the resource name we want to load
 ```c#
-		[DllImport("User32.dll", CharSet = CharSet.Unicode)]
-        readonly static LQMSplash ms_frmSplash = null;
-        readonly string resourceName = "LoccioniQueueManager.ClearQ.bat";
-        readonly string temp_path = System.IO.Path.GetTempPath() + "\\LQM.bat";
-        readonly string Printer = ConfigurationManager.AppSettings["PrinterName"];
+		public string resourceName { get; }
+        public string tempPath { get;}
+        public bool enableFeatures { get;}
+        internal Execute()
+        {
+            resourceName = "LoccioniQueueManager.ClearQ.bat";
+            tempPath = System.IO.Path.GetTempPath() + "\\LQM.bat";
+            enableFeatures = ConfigurationManager.AppSettings["EnablePortFunc"] == "Y" ? true : false;
+        }
 ```
 
-The following lines load the assembly, create the file temporarily, run the necessary work, and then delete the file.
+The following function takes a printer object, creates the batch file and executes it with the properties of the printer object.
+
 ```c#
-			var assembly = Assembly.GetExecutingAssembly();
+	    public void ExecuteMain(userPrinter currPrinter)
+        {
+            initiateSplash();
+            if (this.enableFeatures)
+            {
+                currPrinter.changeIP();
+            }
+            var assembly = Assembly.GetExecutingAssembly();
             using (Stream input = assembly.GetManifestResourceStream(resourceName))
-            using (Stream output = File.Create(temp_path))
+            using (Stream output = File.Create(this.tempPath))
             {
                 CopyStream(input, output);
             }
-            ExecuteCommand(temp_path, Printer);
-            File.Delete(temp_path);
+            ExecuteCommand(currPrinter.Name);
+            File.Delete(this.tempPath);
+        }
+
 ```
 
 The CopyStream method referenced is the following which writes what was provided to the output.
@@ -130,7 +149,7 @@ The CopyStream method referenced is the following which writes what was provided
         }
 ```
 
-Perfect we found a way to embed the batch file and run it, but wait how are we running it, what is this ExecuteCommand function?
+Perfect we found a way to embed the batch file and run it, but wait how are we running it, But wait what is this ExecuteCommand, printerObject, and initiateSplash?
 
 
 <h3 align="center">Running the script from the exe</h3>
@@ -139,11 +158,9 @@ The core solution to the printer issue is resolved by running the batch file but
 
 Through processes, we create a new process which will be cmd.exe running the batch file with the only parameter being the printer name.
 ```C#
-        public void ExecuteCommand(string command, string printerName)
+        public void ExecuteCommand(string printerName)
         {
-
-
-            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command + " " + "\"" + printerName + "\"")
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + this.tempPath + " " + "\"" + printerName + "\"")
             {
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
@@ -169,7 +186,7 @@ This is where a splash screen comes into play.
 
 <h3 align="center">The splash screen</h3>
 
-Honestly, the code to run the splash screen is not difficult, all we are doing is running it in its thread so it shows for 7 seconds and then after those 7 seconds, we create the script, run it, and then delete it. This code would be in the same location  but before where the assmebly is loaded and creates the temporary bat file.
+Honestly, the code to run the splash screen is not difficult, all we are doing is running it in its thread so it shows for 7 seconds and then after those 7 seconds, we create the script, run it, and then delete it. This leads to the initiateSplash method shown below.
 ```c#
  if (ms_frmSplash != null)
                 return;
@@ -195,6 +212,30 @@ The difficult part about the splash screen was creating the actual design, but t
 
 It achieved the main goal of telling the user exactly what to do without too much information, as the whole point of this executable is to minimize the amount of user input.
 
+
+<h3 align="center">What is the userprinter class?</h3>
+
+The userPrinter class serves as the printer object of the printer that will be primarly tampered with. Currently the following the barebone sbut this level of refactporing was necessray for part 2 of this article, so for now enjpy this barebones class.
+
+```
+﻿using System.Net;
+using System.Diagnostics;
+using System.Configuration;
+
+namespace LoccioniQueueManager
+{
+    internal class userPrinter
+    {
+        public string Name { get;}
+        internal userPrinter()
+        {
+            Name = ConfigurationManager.AppSettings["PrinterName"];
+        }
+    }
+}
+
+```
+
 <h3 align="center">Wait What About Administrator Privleages</h3>
 We did all this work but we seemed to have forgotten about something, Restarting a service requires administrator privileges. How exactly are we going to approach that?
 
@@ -207,55 +248,48 @@ I prefer the first as that is the more secure method but the second works as wel
 
 So with all this, I was able to create a simple program that looked like the following:
 ```
-using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 namespace LoccioniQueueManager
 {
     internal class Execute
     {
-        [DllImport("User32.dll", CharSet = CharSet.Unicode)]
-        public static extern int MessageBox(IntPtr h, string m, string c, int type);
-        readonly static LQMSplash ms_frmSplash = null;
-        readonly string resourceName = "LoccioniQueueManager.ClearQ.bat";
-        readonly string temp_path = System.IO.Path.GetTempPath() + "\\LQM.bat";
-        readonly string Printer = ConfigurationManager.AppSettings["PrinterName"];
-
-        public void ExecuteMain()
+        public string resourceName { get; }
+        public string tempPath { get;}
+        public bool enableFeatures { get;}
+        internal Execute()
         {
-            if (ms_frmSplash != null)
-                return;
-            Thread ms_oThread = new Thread(new ThreadStart(StartForm));
-            ms_oThread.Start();
-            System.Threading.Thread.Sleep(7000);
-            ms_oThread.Abort();
-            
+            resourceName = "LoccioniQueueManager.ClearQ.bat";
+            tempPath = System.IO.Path.GetTempPath() + "\\LQM.bat";
+            enableFeatures = ConfigurationManager.AppSettings["EnablePortFunc"] == "Y" ? true : false;
+        }
+
+        readonly static LQMSplash ms_frmSplash = null;
+
+        public void ExecuteMain(userPrinter currPrinter)
+        {
+            initiateSplash();
+            if (this.enableFeatures)
+            {
+                currPrinter.changeIP();
+            }
             var assembly = Assembly.GetExecutingAssembly();
             using (Stream input = assembly.GetManifestResourceStream(resourceName))
-            using (Stream output = File.Create(temp_path))
+            using (Stream output = File.Create(this.tempPath))
             {
                 CopyStream(input, output);
             }
-            ExecuteCommand(temp_path, Printer);
-            File.Delete(temp_path);
+            ExecuteCommand(currPrinter.Name);
+            File.Delete(this.tempPath);
         }
-        
-        public void ExecuteCommand(string command, string printerName)
+
+        public void ExecuteCommand(string printerName)
         {
-
-
-            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + command + " " + "\"" + printerName + "\"")
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + this.tempPath + " " + "\"" + printerName + "\"")
             {
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
@@ -281,6 +315,16 @@ namespace LoccioniQueueManager
             }
         }
 
+        public void initiateSplash()
+        {
+            if (ms_frmSplash != null)
+                return;
+            Thread ms_oThread = new Thread(new ThreadStart(StartForm));
+            ms_oThread.Start();
+            System.Threading.Thread.Sleep(7000);
+            ms_oThread.Abort();
+        }
+
         private void StartForm()
         {
             LQMSplash ms_frmSplash = new LQMSplash();
@@ -290,13 +334,30 @@ namespace LoccioniQueueManager
 }
 ```
 
+With the program.cs looking like the following:
+```
+﻿namespace LoccioniQueueManager
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Execute ex = new Execute();
+            userPrinter myPrinter = new userPrinter();
+            ex.ExecuteMain(myPrinter);
+        }
+    }
+}
+
+```
+
 When the program is installed by our team, the printer name will have the desired value so when the program is running it will show the splash screen and you will then get a test page!
 
-This was not a difficult program at all but it was fun to construct while taking into consideration not only my end-user but also the environment I was going to place it in.
+This was not a difficult program at all but it was fun to construct while taking into consideration not only my end-user but also the environment I was going to place it in. Plus I had to refactor the code right before new years.
 
 However it is not done, two things were not covered in this article:
 - The installer
-- how [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) was used in this project
+- how [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) was used in this project which would expand the userPrinter class
 
 This article was only part 1 of the project, as I wanted to first just give an introduction to the work done.
 
