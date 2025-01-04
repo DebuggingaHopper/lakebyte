@@ -7,7 +7,7 @@ description: Discussing Part 2 of the creation of software that troubleshoots a 
 
 <h1 align="center">Introduction</h1>
 
-If your reading part 2 then hopefully you have read part 1 of this project, if not well then here's a refresh:
+If your are reading part 2 then hopefully you have read part 1 of this project, if not well then here's a refresher:
 
 Imagine getting over 20 calls in a month about a printer giving a problem, the issues always tend to be the same:
     - The printer queue is jammed
@@ -21,24 +21,24 @@ In part 1 we created the main foundation of the program consisting of three clas
 <h2 align="center">Part 2 of The Printer Troubleshooter</h2>
 
 In this article we will detail the main components that create the next version of the printer troubleshooter:
-- userPrinter class - this class will have various methods added to ensure we can change the IP set in the port for this printer. In this class we will be using prnport
-- Execute - will have new information added into the Execute class constructor, alongside a new line in the ExecuteMain method.
+- userPrinter class - this class will have various methods added to ensure we can change the IP set in the port for this printer. In this class, we will be using prnport
+- Execute - will have new information added to the Execute class constructor, alongside a new line in the ExecuteMain method.
 
 
 
 <h3 align="center">Background Info</h3>
 
-Before even going forward, since we cleared the printer queue, what seems to the be the main issue that this second version will address:
+Before even going forward, since we cleared the printer queue, what seems to be the main issue that this second version will address:
 
-The issue being the IP of the printer changing, this can be very obnoxious as the HelpDesk team would need to remote into the device, and with administrator privleage change the IP that the port of this printer is pointing to.
+The issue is the IP of the printer changing, this can be very obnoxious as the HelpDesk team would need to remote into the device, and with administrator privilege change the IP that the port of this printer is pointing to.
 
 
 
 <h3 align="center">The Config</h3>
 
-Before diving into the code, the config file mentioned in thame: this is the parameter that will be used the most to determine which printer to print a test page frome previous article will need to be revised to include the following:
+Before diving into the code, the config file mentioned in the previous article will need to be revised to include the following:
 
-- The printer host name: This is the hostname that the printer was configured to have
+- The printer hostname: This is the hostname that the printer was configured to have
 - the Port Name: This is belonging to the port that the printer communicates to
 
 The config file would look like the following:
@@ -57,18 +57,18 @@ The config file would look like the following:
 </Configuration>
 ```
 
-Now let's jump into the code
+Now let's jump into the code.
 
 <h3 align="center">How to communicate with the Port?</h3>
 
-So we want to communicate with the printer port, well hold on there's multiple questions:
+So we want to communicate with the printer port, well hold on there are multiple questions:
 1. How do we get the new IP of the printer in the first place?
 2. How do we have the port of the printer have this new IP?
 
 
 So let's start with the following how exactly do we get the new IP of the printer?
 
-Well thankfully there is a way, see when we ping the hostname of a device we tend to get the IP returned to us, but wait that means we need the host name. Thank goodness we made that change in the config file.
+Well thankfully there is a way, to see when we ping the hostname of a device we tend to get the IP returned to us, but wait that means we need the hostname. Thank goodness we made that change in the config file.
 
 
 So now our userPrinter class will look like the following:
@@ -101,7 +101,7 @@ Now what we want to do is get an IP Address, well thankfully there is System.Net
 ```
 
 
-Cool we made an object refrenecing the host name and within this object there is a list of 1 item that being the returned IP
+Cool we made an object referencing the hostname and within this object, there is a list of 1 item that is the returned IP
 ```
       public void changeIP()
         {
@@ -116,26 +116,26 @@ Cool we made an object refrenecing the host name and within this object there is
         }
 ```
 
-So now that we have the IP, lets change the ports IP its referencing, wait but how in the world do we achieve that?
+So now that we have the IP, let's change the ports IP it's referencing, wait but how in the world do we achieve that?
 
 
 <h4 align="center">So what's prnport</h4>
 
-So Windows has some really nice command line tools which help with printer management, so let's use one of these tools with the IP we got from our code.
+Windows has some nice command line tools that help with printer management, so let's use one of these tools with the IP we got from our code.
 
-PrnPort is something I found really fascinating the first time I saw it, as this is something that can edit, create, delete and just play with the TCP/IP ports of a printer.
+PrnPort is something I found fascinating the first time I saw it, as this is something that can edit, create, delete, and just play with the TCP/IP ports of a printer.
 
-After reading the documentation (which honestly was very simple and easy to get used to after a bit) I was able to draft the following
+After reading the documentation (which honestly was very simple and easy to get used to after a bit) I was able to draft the following.
 
 ```
 prnport -t -r portName -h newIP -n 9100
 ```
 
-All we are doing is revising the port with the specefied name to the specefied IP address and ensuring it has the right port number.
+All we are doing is revising the port with the specific name to the specific IP address and ensuring it has the right port number.
 
-Now we can test this command pon any computer however every time we need to remember that not only do we use cscript but the directory we have to be in is **%WINdir%\System32\printing_Admin_Scripts\en-US\prnport**
+Now we can test this command on any computer however every time we need to remember that not only do we use cscript but the directory we have to be in is **%WINdir%\System32\printing_Admin_Scripts\en-US\prnport**
 
-So now we are using a command line tool in a specefied directory, well then given we did something similar looks like now we will be combining the processes library and prnport in one function:
+So now we are using a command line tool in a specific directory, well then given we did something similar looks like now we will be combining the processes library and prnport in one function:
 
 ```
        public void ExecutePrinterManagementCommand(IPAddress IpAddress)
@@ -159,17 +159,17 @@ So now we are using a command line tool in a specefied directory, well then give
         }
 ```
 
-Now this may seem like alot but remember what we got is an IPAddress type, but we want a string in our cmd command. So lets just make that Ip into a string, and plug it into our string calling the prnport command with the given parameters.
+Now this may seem like a lot but remember what we got is an IPAddress type, but we want a string in our cmd command. So let's just make that IP into a string, and plug it into our string calling the prnport command with the given parameters.
 
-But wait how do we know we are in the right directoiry cause if I run this anywhere else it won't know what prnport is. Well thankfully the processStartInfo object has a workingDirectory parameter, allowing us to quickly set it to what we need.
+But wait how do we know we are in the right directory cause if I run this anywhere else it won't know what prnport is. Well, thankfully the processStartInfo object has a workingDirectory parameter, allowing us to quickly set it to what we need.
 
-but wait before we finish lets see whats another way to revise our way to get the IP address from a hostname!
+But wait before we finish let's see what another way to revise our way to get the IP address from a hostname!
 
 <h4 align="center">improving how to get IP from hostname</h4>
 
-So we have one way to get the IP address from a hostname, but its in two different methods. There should be a different way to do it right?
+So we have one way to get the IP address from a hostname, but it's in two different methods. There should be a different way to do it right?
 
-Not only that what if we get IPv6, this method seems really ineffecient doesn't it, well what if we can condense it even more:
+Not only that what if we get IPv6, this method seems inefficient doesn't it, well what if we can condense it even more:
 ```
 public void changeIP(){
     IPAddress outIpAddress;
@@ -180,16 +180,16 @@ public void changeIP(){
 }
 ```
 
-Would you look at that not only did we just condensed two methods into one, we also ensured the IP address we get is IPv4 and before even trying that we confirm if we get any IP from the hostname at all.
+Would you look at that not only did we just condense two methods into one, but we also ensured the IP address we get is IPv4, and before even trying that we confirmed if we got any IP from the hostname at all.
 
-So perfect we ensured that we can change the IP of the port and found an easy way to resolve the hostname. But wait this is still an experimental feature, how can i toggle if i want to use it or not.
+So perfect we ensured that we could change the IP of the port and found an easy way to resolve the hostname. But wait this is still an experimental feature, how can I toggle if I want to use it or not?
 
 
 <h3 align="center">How to toggle this feature?</h3>
 
-Well we did all this work but I dont want my team to use this feature yet, how do we stop them per say?
+Well we did all this work but I don't want my team to use this feature yet, how do we stop them per se?
 
-Well here comes the fun part, first we edit the config to have the following:
+Well here comes the fun part, first we edited the config to have the following:
 ```xml<?xml version="1.0" encoding="utf-8"?>
 <Configuration>
 	<startup>
@@ -215,7 +215,7 @@ So what does this do, well its the flag our code will check, as now we will go t
         }
 ```
 
-A simple boolean flag has now been made and in our execute main method all we need to is the following:
+A simple boolean flag has now been made and in our execute main method all we need to do is the following:
 ```c#
        public void ExecuteMain(userPrinter currPrinter)
         {
@@ -236,12 +236,12 @@ A simple boolean flag has now been made and in our execute main method all we ne
 
 ```
 
-The only change is that we check this parameter in the execute class, and if true we immeditaelt change the IP as this troubleshooter is meant to fix everything in one go.
+The only change is that we check this parameter in the execute class, and if true we immediately change the IP as this troubleshooter is meant to fix everything in one go.
 
 So perfect we have everything for our next version of the troubleshooter!
-<h2 align="center">Conclusion/h2>
+<h2 align="center">Conclusion</h2>
 
-Congrats now we have everything set for this new feature, but wait as much as we have covered the development of this feature, we never got to the installer. Well that's part 3 of this project as I have a story about that.
+Congrats now we have everything set for this new feature, but wait as much as we have covered the development of this feature, we never got to the installer. Well, that's part 3 of this project as I have a story about that.
 
 
 
