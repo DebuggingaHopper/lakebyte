@@ -15,7 +15,7 @@ const Header: React.FC = () => {
       <header className="py-2">
         <Link
           href="/"
-          className="text-2xl font-bold text-HeaderText text-center hover:text-[#ffffff]"
+          className="text-2xl font-bold text-[#ffffff] text-center hover:text-HeaderText"
         >
           @ECHO D@H
         </Link>
