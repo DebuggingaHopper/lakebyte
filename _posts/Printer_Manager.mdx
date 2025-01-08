@@ -94,7 +94,7 @@ Additionally, we never know when the printer would be acting up, so instead of r
 
 It's not hard to achieve it.
 
-<h3 align="center">Embedding the script</h3>
+<h4 align="center">Embedding the script</h4>
 
 This was where the perspective shifted a bit, we would like to do some practices that would prevent the program from being seen as an issue by an IT department and make this program still rely on 0 user input.
 
@@ -152,7 +152,7 @@ The CopyStream method referenced is the following which writes what was provided
 Perfect we found a way to embed the batch file and run it, but wait how are we running it, But wait what is this ExecuteCommand, printerObject, and initiateSplash?
 
 
-<h3 align="center">Running the script from the exe</h3>
+<h4 align="center">Running the script from the exe</h4>
 
 The core solution to the printer issue is resolved by running the batch file but how can we run it from the exe, this is where [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0)  comes into play.
 
@@ -215,7 +215,7 @@ It achieved the main goal of telling the user exactly what to do without too muc
 
 <h3 align="center">What is the userprinter class?</h3>
 
-The userPrinter class serves as the printer object of the printer that will be primarly tampered with. This refactoring was necessray for part 2 of this article, so for now enjpy this barebones class.
+The userPrinter class serves as the printer object of the printer that will be primarly tampered with. This refactoring was necessray for part 2 of this article, so for now enjoy this barebones class.
 
 ```
 ﻿using System.Net;
@@ -237,6 +237,7 @@ namespace LoccioniQueueManager
 ```
 
 <h3 align="center">Wait What About Administrator Privleages</h3>
+
 We did all this work but we seemed to have forgotten about something, Restarting a service requires administrator privileges. How exactly are we going to approach that?
 
 Well, there are two ways;
@@ -244,7 +245,8 @@ Well, there are two ways;
 - Creating a shortcut of the application with [savecred](https://community.spiceworks.com/t/run-program-with-admin-rights-shortcut/630687/6)
 
 I prefer the first as that is the more secure method but the second works as well but I dislike it.
-<h2 align="center">Final Product & Conclusion</h2>
+
+<h3 align="center">Final Product & Conclusion</h3>
 
 So with all this, I was able to create a simple program that looked like the following:
 ```
