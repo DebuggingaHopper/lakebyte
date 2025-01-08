@@ -191,7 +191,8 @@ So perfect we ensured that we could change the IP of the port and found an easy 
 Well we did all this work but I don't want my team to use this feature yet, how do we stop them per se?
 
 Well here comes the fun part, first we edited the config to have the following:
-```xml<?xml version="1.0" encoding="utf-8"?>
+```xml
+<?xml version="1.0" encoding="utf-8"?>
 <Configuration>
 	<startup>
 		<supportedRuntime version="v4.0" sku=".NETFramework,Version=v4.7"/>
@@ -243,7 +244,165 @@ So perfect we have everything for our next version of the troubleshooter!
 
 <h2 align="center">Conclusion</h2>
 
-Congrats now we have everything set for this new feature, but wait as much as we have covered the development of this feature, we never got to the installer. Well, that's part 3 of this project as I have a story about that.
+Congrats now we have everything set for this new feature:
+
+1. Execute.cs
+```
+﻿using System.Configuration;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading;
+using System.Windows.Forms;
+namespace LoccioniQueueManager
+{
+    internal class Execute
+    {
+        public string resourceName { get; }
+        public string tempPath { get;}
+        public bool enableFeatures { get;}
+        internal Execute()
+        {
+            resourceName = "LoccioniQueueManager.ClearQ.bat";
+            tempPath = System.IO.Path.GetTempPath() + "\\LQM.bat";
+            enableFeatures = ConfigurationManager.AppSettings["EnablePortFunc"] == "Y" ? true : false;
+        }
+
+        readonly static LQMSplash ms_frmSplash = null;
+
+        public void ExecuteMain(userPrinter currPrinter)
+        {
+            initiateSplash();
+            if (this.enableFeatures)
+            {
+                currPrinter.changeIP();
+            }
+            var assembly = Assembly.GetExecutingAssembly();
+            using (Stream input = assembly.GetManifestResourceStream(resourceName))
+            using (Stream output = File.Create(this.tempPath))
+            {
+                CopyStream(input, output);
+            }
+            ExecuteCommand(currPrinter.Name);
+            File.Delete(this.tempPath);
+        }
+
+        public void ExecuteCommand(string printerName)
+        {
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + this.tempPath + " " + "\"" + printerName + "\"")
+            {
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+
+            };
+            var process = Process.Start(processInfo);
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+            process.Close();
+        }
+
+        public void CopyStream(Stream input, Stream output)
+        {
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            while ((bytesRead = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, bytesRead);
+            }
+        }
+
+        public void initiateSplash()
+        {
+            if (ms_frmSplash != null)
+                return;
+            Thread ms_oThread = new Thread(new ThreadStart(StartForm));
+            ms_oThread.Start();
+            System.Threading.Thread.Sleep(7000);
+            ms_oThread.Abort();
+        }
+
+        private void StartForm()
+        {
+            LQMSplash ms_frmSplash = new LQMSplash();
+            Application.Run(ms_frmSplash);
+        }
+    }
+}
+```
+
+2. userPrinter.cs
+
+```
+﻿using System.Net;
+using System.Diagnostics;
+using System.Configuration;
+
+namespace LoccioniQueueManager
+{
+    internal class userPrinter
+    {
+        public string Name { get;}
+        public string hostName { get;}
+        public string portName { get;}
+        internal userPrinter()
+        {
+            Name = ConfigurationManager.AppSettings["PrinterName"];
+            hostName = ConfigurationManager.AppSettings["HostName"];
+            portName = ConfigurationManager.AppSettings["PortName"];
+        }
+
+        public void changeIP(){
+            IPAddress outIpAddress;
+            if(IPAddress.TryParse(this.hostName,out outIpAddress) == true){
+                IPAddress address = System.Net.Dns.GetHostEntry(this.hostName).AddressList.First(addr => addr.AddressFamily == System.Net.Sockets.AddressFaamily.InterNetwork);
+                this.ExecutePrinterManagementCommand(address);
+        }   
+
+        public void ExecutePrinterManagementCommand(IPAddress IpAddress)
+        {
+            string newIP = IpAddress.ToString();
+            var processInfo = new ProcessStartInfo("cmd.exe", "/c " + "cscript prnport -t -r" + " " + "\"" + this.portName + "\"" + " " + "-h" + newIP + " " + "-n 9100")
+            {
+                CreateNoWindow = true,
+                WorkingDirectory = @"%WINdir%\System32\printing_Admin_Scripts\en-US",
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true
+
+            };
+            var process = Process.Start(processInfo);
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            process.WaitForExit();
+            process.Close();
+        }
+    }
+}
+```
+
+3. program.cs
+```
+﻿namespace LoccioniQueueManager
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Execute ex = new Execute();
+            userPrinter myPrinter = new userPrinter();
+            ex.ExecuteMain(myPrinter);
+        }
+    }
+}
+
+```
+
+ but wait as much as we have covered the development of this feature, we never got to the installer. Well, that's part 3 of this project as I have a story about that.
 
 
 
