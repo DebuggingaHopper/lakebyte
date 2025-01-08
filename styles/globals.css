@@ -3,21 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --background: #f0eadc;
+  --background: #131b22;
   --foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #f0eadc;
+    --background: #131b22;
     --foreground: #171717;;
   }
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #131b22;
   font-family: Arial, Helvetica, sans-serif;
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
 }
 
 @layer utilities {
