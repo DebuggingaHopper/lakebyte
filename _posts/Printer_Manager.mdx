@@ -7,45 +7,44 @@ description: Discussing Part 1 of  the creation of software that troubleshoots a
 
 <h1 align="center">Introduction</h1>
 
-Imagine getting over 20 calls in a month about a printer giving a problem, the issues always tend to be the same:
+Imagine getting over 20 calls in a month about the same issues:
+
     - The printer queue is jammed
-    - The IP of the printer changed so the port needs to be reconfigured
+    - The IP of the printer changed so the port needs to be edited
 	
+While your bashing your head as it takes longer to log in than to fix the issue, the head damage provided a brilliant idea, to create a program to handle it for you.
 
-The amount of time it takes to log in to remote into the device to fix the printer always takes from 2 minutes to 15 minutes.
+A batch script emerges as a possible savior but then it dawns on me:
+- The solution will be on a device in a medical institution
+- I should assume my user does not know what a terminal is
 
-Initially, the issue could have been solved through a batch script but after taking into consideration the end-users and where this program would stay, I decided on a different approach.
-
-Through a C# .Net Application that utilizes two libraries [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) this issue was able to be removed. Allowing the client to just continue with their day without needing to make a call, no news is good news (most of the time).
+After (over)thinking for 4 hours, I decided a C# .Net Application that utilizes [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) would be best to remove the most obnoxious call in my teams workday.
 
 
 
 
 <h2 align="center">Part 1 of The Printer Troubleshooter</h2>
 
-In this article we will detail the main components that create the first version of the printer troubleshooter:
-- execute class - dissassembles and executes a batch file
-- userPrinter class - the class for the printer being communicated with
-This will not include any mention of prnport or the installer mentioned that helps with configruing the executables config file.
+We are not going to delve into the whole project in one article, instead we will delve into the main components:
+- execute class - disassembles and executes a batch file to clear the queue
+- userPrinter class - Handles the printer you will be troubleshooting with
+
+To ensure the project is showcased in the best light, we will be just highlighting the most bare bone version of the project, so there will be no installer,unit tests or installer created for it.
 
 <h3 align="center">Background Info</h3>
 
-Before even making this program there were some questions I needed to answer:
+Before even making this program, what did I have to consider:
 
-1. What is the problem to solve? - Jammed Printer Queue, and IP of the printer changes causing incongruincey with the port
-2. Who are the end-users? - Individuals who most commonly do not have much experience with computers
-3. Who will see the program files - IT teams monitoring the devices this executable is installed on
+1. What is the problem to solve? - Jammed Printer Queue, and Iautomate changing an IP for a port
+2. Who are the end-users? - regular people
+3. Who will see the program files - Institution IT teams (the bane of developers)
 4. What will be needed as input? - The user should not provide any input, all the necessary input is taken from the config file
-5. What platform is this for? - The PC models have .NET 4.7 & 4.8 installd respectively so for this to work we have to make a version for each
+5. What platform is this for? -  Windows PC's which have .NET 4.7 & 4.8 installed respectively
 
 
 <h3 align="center">The Config file</h3>
 
-Before diving into the code, the config file mentioned in the previous section consists of one parameter for this article:
-
-- The printer name: this is the parameter that will be used the most to determine which printer to print a test page from
-
-The config file would look like the following:
+So the user shouldn't need to know anything about the printer, so what's the best way to handle it, well a config file. In this bare bones config all we need is:
 ``` XML
 <?xml version="1.0" encoding="utf-8"?>
 <Configuration>
@@ -63,11 +62,9 @@ Now that we got that little thing out of the way let's jump into it.
 
 <h3 align="center">How to clear the queue?</h3>
 
-To resolve the core issue on the printer, we would need to clear its queue. Well, a simple Google search can display that through a [batch file](https://community.spiceworks.com/t/clearing-print-cache-using-a-batch-file/1004358) the print spooler can be restarted, alongside clearing the queue. This is a good start as this is something the user won't see, but how is the user supposed to know the job is finished?
+All we need to is clear the printer queue. Well, a simple Google search shows a [batch file](https://community.spiceworks.com/t/clearing-print-cache-using-a-batch-file/1004358). This is a good start as this is something the user won't see, but how is the user supposed to know the job is finished?
 
-[Printing a test page](https://stackoverflow.com/questions/58744651/i-need-a-batch-file-which-can-start-print-test-page-from-default-printer) is the perfect way to show the user the job is done. Now of course we would need to create a config file for this application that takes the printer name, as we only need to do this for one printer.
-
-So we have a batch script like the following.
+[Printing a test page](https://stackoverflow.com/questions/58744651/i-need-a-batch-file-which-can-start-print-test-page-from-default-printer) is the perfect way to show the user the job is done, because we all know they wont want to waste a second to read a popup or bother to close it.
 
 ```bat
 for /F "tokens=3 delims=: " %%H in ('sc query 'Spooler" ^| findstr "STATE"') DO (
@@ -88,20 +85,17 @@ rundll32 printui.dll, PrintUIEntry /k /n %1
 
 But would a batch file be all that's needed to solve the problem, and not an exe? 
 
-I thought the same thing till I realized that it would not be wise for the final product to have a batch script publically visible, let's not have an IT department place me into a chokehold. 
+I thought the same thing till I realized that it would not be wise for the final product to have a batch script publicly visible, let's not have an IT department place me into a choke hold. 
 
-Additionally, we never know when the printer would be acting up, so instead of relying on a batch script have an exe run said script when the user wants it to run, but how can this be achieved without any security concerns with the batch script?
-
-It's not hard to achieve it.
+We never know when the printer would be acting up, so the exe should run the script when the user wants it to, but can we do this without getting interorgated?
 
 <h4 align="center">Embedding the script</h4>
 
-This was where the perspective shifted a bit, we would like to do some practices that would prevent the program from being seen as an issue by an IT department and make this program still rely on 0 user input.
+This was where the perspective shifted a bit, I wanted to make not only a secure program but also one that is able to stay afloat even after a couple of years.
 
-So first we create the execute class which will consist of the batch resource name, and temporary file path
+To accomplish this I have a class that consists of the resourceName, and tempPath. enableFeatures is not relevant at the moment so disregard it
 
 
-As we have the config file we also want to use those values, You'll see some code referencing two variables which are the temporary location the file will go to, and the resource name we want to load
 ```c#
 		public string resourceName { get; }
         public string tempPath { get;}
@@ -114,7 +108,7 @@ As we have the config file we also want to use those values, You'll see some cod
         }
 ```
 
-The following function takes a printer object, creates the batch file and executes it with the properties of the printer object.
+I wanted to make this class a bit more interesting by allowing it to use the embedded batch file in the assembly, and doing everything in one go 
 
 ```c#
 	    public void ExecuteMain(userPrinter currPrinter)
@@ -136,7 +130,7 @@ The following function takes a printer object, creates the batch file and execut
 
 ```
 
-The CopyStream method referenced is the following which writes what was provided to the output.
+The CopyStream method blew my mind when i first found out what I could do was write the information from the assembely into a file. Could you believe it the batch file does not need to be explicitly in the folder when we run the code, it gets created in run time and then deleted after its use. 
 ```c#
         public void CopyStream(Stream input, Stream output)
         {
@@ -149,14 +143,13 @@ The CopyStream method referenced is the following which writes what was provided
         }
 ```
 
-Perfect we found a way to embed the batch file and run it, but wait how are we running it, But wait what is this ExecuteCommand, printerObject, and initiateSplash?
-
+But wait what are these functions, variables and objects referenced. Even more how does this class even get to display the information to the user in a way they don't think I am hacking their computer.
 
 <h4 align="center">Running the script from the exe</h4>
 
 The core solution to the printer issue is resolved by running the batch file but how can we run it from the exe, this is where [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0)  comes into play.
 
-Through processes, we create a new process which will be cmd.exe running the batch file with the only parameter being the printer name.
+We create a new process which will be an instance of cmd running our batch file with the only argument being the name of the printer object
 ```C#
         public void ExecuteCommand(string printerName)
         {
@@ -181,12 +174,11 @@ Through this API library, we can use the temporary batch file and run it without
 
 So now we have the batch script ready to run in the exe, but wait how will the user know the program ran? Sure we have the test page but what if the user is impatient, remember the end-user wants something to tell them something is happening.
 
-This is where a splash screen comes into play.
 
 
 <h3 align="center">The splash screen</h3>
-
-Honestly, the code to run the splash screen is not difficult, all we are doing is running it in its thread so it shows for 7 seconds and then after those 7 seconds, we create the script, run it, and then delete it. This leads to the initiateSplash method shown below.
+ 
+ All we are doing is running an instance of the splash screen in its thread so it shows for 7 seconds and then after those 7 seconds, we create the script, run it, and then delete it. 
 ```c#
  if (ms_frmSplash != null)
                 return;
@@ -196,7 +188,7 @@ Honestly, the code to run the splash screen is not difficult, all we are doing i
             ms_oThread.Abort();
 ```
 
-Even the function StartForm is just creating a new instance of the SplashScreen object and having the application run it.
+We want to create a new instance of the SplashScreen object when the thread is made, well thankfully this was not difficult.
 ```c#
         private void StartForm()
         {
@@ -205,17 +197,15 @@ Even the function StartForm is just creating a new instance of the SplashScreen 
         }
 ```
 
-The difficult part about the splash screen was creating the actual design, but thanks to Figma and the understanding of the ideal [splash screen sizes](https://stackoverflow.com/questions/605965/standard-sizes-for-windows-splash-screens) I was able to create a decent design
+The biggest headache was creating the design of the screen, and adjusting to the ideal [splash screen sizes](https://stackoverflow.com/questions/605965/standard-sizes-for-windows-splash-screens). After so many attempts, I was able to create the following:
 
 <figure> <center> <img src="/assets/SplashScreen.PNG" alt="SPLASH_SCREEN" width="300" height="300" /> <figcaption> Splash Screen designed in figma</figcaption> </center></figure>
 
 
-It achieved the main goal of telling the user exactly what to do without too much information, as the whole point of this executable is to minimize the amount of user input.
-
 
 <h3 align="center">What is the userprinter class?</h3>
 
-The userPrinter class serves as the printer object of the printer that will be primarly tampered with. This refactoring was necessray for part 2 of this article, so for now enjoy this barebones class.
+The userPrinter class serves as the only way to differentiate what printer we are working on when it deploy it to a new PC. This came up during my refactoring which will be later explored for part 2 of this article, so for now enjoy this barebones class.
 
 ```
 ﻿using System.Net;
@@ -244,11 +234,11 @@ Well, there are two ways;
 - Creating a task Scheduler script to run the program that will work even if the user is signed off, and creating a shortcut to said task scheduler script
 - Creating a shortcut of the application with [savecred](https://community.spiceworks.com/t/run-program-with-admin-rights-shortcut/630687/6)
 
-I prefer the first as that is the more secure method but the second works as well but I dislike it.
+I prefer the first as that is the more secure method but the second works as well but I dislike it so much as it just violates the principle of least privileges. like seriously who in their right mind wants to do this willingly.
 
 <h3 align="center">Final Product & Conclusion</h3>
 
-So with all this, I was able to create a simple program that looked like the following:
+Now that I have caused you dear reader to read through all this, here is the final product!
 ```
 using System.Configuration;
 using System.Diagnostics;
@@ -353,16 +343,14 @@ With the program.cs looking like the following:
 
 ```
 
-When the program is installed by our team, the printer name will have the desired value so when the program is running it will show the splash screen and you will then get a test page!
+This project was far from complex  but it was fun to construct based upon the restrictions I had placed onto myself and understanding the core audience of the program.
 
-This was not a difficult program at all but it was fun to construct while taking into consideration not only my end-user but also the environment I was going to place it in. Plus I had to refactor the code right before new years.
-
-However it is not done, two things were not covered in this article:
+it is far from done, two things were not covered in this article:
 - The installer
 - how [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) was used in this project which would expand the userPrinter class
 
-This article was only part 1 of the project, as I wanted to first just give an introduction to the work done.
+I wanted to just give an introduction to a bit of the madness I created.
 
-The next article will delve more into how prnport was used and while part 3 will show how the installer was made, as it was my first time making one and had me bashing my head at my hotel room desk.
+The next article will delve more into how prnport was used while part 3 will show how the installer was made, as it was my first time making one and had me bashing my head at my hotel room desk.
 
 
