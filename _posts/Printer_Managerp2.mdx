@@ -7,30 +7,35 @@ description: Discussing Part 2 of the creation of software that troubleshoots a 
 
 <h1 align="center">Introduction</h1>
 
-If your are reading part 2 then hopefully you have read part 1 of this project, if not well then here's a refresher:
 
-Imagine getting over 20 calls in a month about a printer giving a problem, the issues always tend to be the same:
-    - The printer queue is jammed
-    - The IP of the printer changed so the port needs to be reconfigured
 
-Through a C# .Net Application that utilizes two libraries [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) this issue was able to be removed. Allowing the client to just continue with their day without needing to make a call, no news is good news (most of the time).
+Welcome again dear reader to the second entry of my madness, yes that's right there is a part 2 to how an operations tech decided to make a full blown program for a printer.
+
 
 In part 1 we created the main foundation of the program consisting of three classes: Execute, userPrinter, and finally the program.cs that has the main method of this program.
 
+But today you will be seeing creation of a new feature, a way to ensure the TCP port for the printer has the correct IP, if not then we get the IP (sounds weird right, how in gods name are we going to achieve that) and set it.
+
+So lets go to part 2 Electric boogaloo!
 
 <h2 align="center">Part 2 of The Printer Troubleshooter</h2>
 
-In this article we will detail the main components that create the next version of the printer troubleshooter:
-- userPrinter class - this class will have various methods added to ensure we can change the IP set in the port for this printer. In this class, we will be using prnport
-- Execute - will have new information added to the Execute class constructor, alongside a new line in the ExecuteMain method.
+All right so what are we going to revisit today, well thankfully no new classes need to be made. You see the whole purpose of my refactoring that I alluded to in part 1 was to ensure any new features would be in the right class.
+
+So what experiments are we going to do to our preexisiting classes?:
+
+- userPrinter class - this class will have various methods added to ensure we can change the IP set in the port for this printer. In this class, we will be using prnport as our main library.
+
+- Execute - will have new information added to the Execute class constructor, alongside a new line in the ExecuteMain method to check whether or not we check the IP & change it.
 
 
 
 <h3 align="center">Background Info</h3>
 
-Before even going forward, since we cleared the printer queue, what seems to be the main issue that this second version will address:
 
-The issue is the IP of the printer changing, this can be very obnoxious as the HelpDesk team would need to remote into the device, and with administrator privilege change the IP that the port of this printer is pointing to.
+Well because printers are Satan spawn they always disconnect from the network every 3-6 months depending on who jinxes it (you know who you are). This can be very obnoxious as the HelpDesk team would need to remote into the device, and with administrator privilege change the IP that the port of this printer is pointing to.
+
+So what black magic are we going to do this time?
 
 
 
@@ -38,8 +43,8 @@ The issue is the IP of the printer changing, this can be very obnoxious as the H
 
 Before diving into the code, the config file mentioned in the previous article will need to be revised to include the following:
 
-- The printer hostname: This is the hostname that the printer was configured to have
-- the Port Name: This is belonging to the port that the printer communicates to
+- Printer hostname: Hostname that the printer was configured to have
+- Port Name: Port that the printer is designated to for outbound information 
 
 The config file would look like the following:
 
@@ -68,8 +73,9 @@ So we want to communicate with the printer port, well hold on there are multiple
 
 So let's start with the following how exactly do we get the new IP of the printer?
 
-Well thankfully there is a way, to see when we ping the hostname of a device we tend to get the IP returned to us, but wait that means we need the hostname. Thank goodness we made that change in the config file.
+Well thankfully there is a way, to see when we ping the HostName of a device we tend to get the IP returned to us, but wait that means we need the HostName. 
 
+But wait, why are we assuming that the HostName will be set, you see if you yell I mean politely enforce your team to always check the HostName of the printer they will know to check it always.
 
 So now our userPrinter class will look like the following:
 ```c#
@@ -84,7 +90,7 @@ internal class userPrinter
         }
 ```
 
-Now what we want to do is get an IP Address, well thankfully there is System.Net which has an IPHostEntry object that lets us do the following:
+Now what we want to do is get an IP Address, well thankfully there is System.Net which has an IPHostEntry object that lets us create an object with it containing an array of 1 element:
 ```c#
        public IPHostEntry ParseIPAddress()
         {
@@ -101,7 +107,7 @@ Now what we want to do is get an IP Address, well thankfully there is System.Net
 ```
 
 
-Cool we made an object referencing the hostname and within this object, there is a list of 1 item that is the returned IP
+Cool now that we have this object, what am i going to do with it....well I am going to use this object to just grab the IP and use it in another function.
 ```
       public void changeIP()
         {
@@ -188,7 +194,7 @@ So perfect we ensured that we could change the IP of the port and found an easy 
 
 <h3 align="center">How to toggle this feature?</h3>
 
-Well we did all this work but I don't want my team to use this feature yet, how do we stop them per se?
+Well we did all this work but I don't want my team to use this feature yet (because if i do they will then blame me, and you see I don't want that) how do we stop them per se?
 
 Well here comes the fun part, first we edited the config to have the following:
 ```xml
@@ -205,7 +211,7 @@ Well here comes the fun part, first we edited the config to have the following:
 	</appSettings>
 </Configuration>
 ```
-So what does this do, well its the flag our code will check, as now we will go the Execute.cs class we made in the last article and do the following to the constructor:
+So what does this do, well its the flag our code will check, as now we will go the Execute.cs class:
 
 ```c#
         public bool enableFeatures { get;}
@@ -217,7 +223,7 @@ So what does this do, well its the flag our code will check, as now we will go t
         }
 ```
 
-A simple boolean flag has now been made and in our execute main method all we need to do is the following:
+A simple boolean flag has now been made, so lets modify the ExecuteMain function a bit:
 ```c#
        public void ExecuteMain(userPrinter currPrinter)
         {
@@ -402,7 +408,9 @@ namespace LoccioniQueueManager
 
 ```
 
- but wait as much as we have covered the development of this feature, we never got to the installer. Well, that's part 3 of this project as I have a story about that.
+ but wait as much as we have covered the development of this feature, we never got to the installer.
+
+So get prepared for the third part of this article where we delve into the obnoxious but entertaining nightmare that is the installer.
 
 
 

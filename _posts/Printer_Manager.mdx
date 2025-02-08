@@ -35,7 +35,7 @@ To ensure the project is showcased in the best light, we will be just highlighti
 
 Before even making this program, what did I have to consider:
 
-1. What is the problem to solve? - Jammed Printer Queue, and Iautomate changing an IP for a port
+1. What is the problem to solve? - Jammed Printer Queue, and automate changing an IP for a port
 2. Who are the end-users? - regular people
 3. Who will see the program files - Institution IT teams (the bane of developers)
 4. What will be needed as input? - The user should not provide any input, all the necessary input is taken from the config file
@@ -62,11 +62,27 @@ Now that we got that little thing out of the way let's jump into it.
 
 <h3 align="center">How to clear the queue?</h3>
 
-All we need to is clear the printer queue. Well, a simple Google search shows a [batch file](https://community.spiceworks.com/t/clearing-print-cache-using-a-batch-file/1004358). This is a good start as this is something the user won't see, but how is the user supposed to know the job is finished?
+All we need to is clear the printer queue. Well, a simple Google search shows a [batch file](https://community.spiceworks.com/t/clearing-print-cache-using-a-batch-file/1004358) that clears the folder which stores the printer queue for the whole computer. I also ensured to have it so depending on the state of the service, we can restart the service as it is always better to be safe than sorry.
+```c#
+for /F "tokens=3 delims=: " %%H in ('sc query 'Spooler" ^| findstr "STATE"') DO (
+	if /I "$%%H" NEQ "STOPPED" (
+		net stop spooler
+		del %systemroot%\System32\spool\printers\* /Q
+		net start Spooler
+	)
+	if /I "$%%H" NEQ "RUNNING" (
+		net start spooler
+		net stop spooler
+		del %systemroot%\System32\spool\printers\* /Q
+		net start Spooler
+	)
+)
+```
+This is a good start as this is something the user won't see, but how is the user supposed to know the job is finished?
 
 [Printing a test page](https://stackoverflow.com/questions/58744651/i-need-a-batch-file-which-can-start-print-test-page-from-default-printer) is the perfect way to show the user the job is done, because we all know they wont want to waste a second to read a popup or bother to close it.
 
-```bat
+```c#
 for /F "tokens=3 delims=: " %%H in ('sc query 'Spooler" ^| findstr "STATE"') DO (
 	if /I "$%%H" NEQ "STOPPED" (
 		net stop spooler
@@ -93,7 +109,7 @@ We never know when the printer would be acting up, so the exe should run the scr
 
 This was where the perspective shifted a bit, I wanted to make not only a secure program but also one that is able to stay afloat even after a couple of years.
 
-To accomplish this I have a class that consists of the resourceName, and tempPath. enableFeatures is not relevant at the moment so disregard it
+To accomplish this I have a class that consists of the resourceName, and tempPath. enableFeatures is not relevant to this article, however for those who are curious enaableFeatures is a flag in the final config for a feature I want to experiment with.
 
 
 ```c#
@@ -130,7 +146,7 @@ I wanted to make this class a bit more interesting by allowing it to use the emb
 
 ```
 
-The CopyStream method blew my mind when i first found out what I could do was write the information from the assembely into a file. Could you believe it the batch file does not need to be explicitly in the folder when we run the code, it gets created in run time and then deleted after its use. 
+The CopyStream method blew my mind when I first found out what I could do was write the information from the assembely into a file. Could you believe it the batch file does not need to be explicitly in the folder when we run the code, it gets created in run time and then deleted after its use. 
 ```c#
         public void CopyStream(Stream input, Stream output)
         {
@@ -170,7 +186,7 @@ We create a new process which will be an instance of cmd running our batch file 
         }
 ```
 
-Through this API library, we can use the temporary batch file and run it without the user needing to see any command line terminal which is perfect.
+Through this API library, we can use the temporary batch file and run it without the user needing to see the command line terminal which is perfect.
 
 So now we have the batch script ready to run in the exe, but wait how will the user know the program ran? Sure we have the test page but what if the user is impatient, remember the end-user wants something to tell them something is happening.
 
@@ -234,11 +250,15 @@ Well, there are two ways;
 - Creating a task Scheduler script to run the program that will work even if the user is signed off, and creating a shortcut to said task scheduler script
 - Creating a shortcut of the application with [savecred](https://community.spiceworks.com/t/run-program-with-admin-rights-shortcut/630687/6)
 
-I prefer the first as that is the more secure method but the second works as well but I dislike it so much as it just violates the principle of least privileges. like seriously who in their right mind wants to do this willingly.
+I prefer the first as that is the more secure method but the second works as well but I dislike it so much as it just violates the principle of least privilege. like seriously who in their right mind wants to do this willingly.
+
+Something I have learned is the importance of security to some degree, sure we can make some decisions that can be seen as questionable but don't put us on the new headlines. However if you never think about security in some way, its going to place you in a corner where you will have no choice but to cry, so its best to just avoid that experience after seeing and experiencing it the first time.
 
 <h3 align="center">Final Product & Conclusion</h3>
 
 Now that I have caused you dear reader to read through all this, here is the final product!
+
+**Execute.cs**
 ```
 using System.Configuration;
 using System.Diagnostics;
@@ -326,7 +346,26 @@ namespace LoccioniQueueManager
 }
 ```
 
-With the program.cs looking like the following:
+**userPrinter.cs**
+```
+﻿using System.Net;
+using System.Diagnostics;
+using System.Configuration;
+
+namespace LoccioniQueueManager
+{
+    internal class userPrinter
+    {
+        public string Name { get;}
+        internal userPrinter()
+        {
+            Name = ConfigurationManager.AppSettings["PrinterName"];
+        }
+    }
+}
+```
+
+**program.cs**
 ```
 ﻿namespace LoccioniQueueManager
 {
@@ -346,8 +385,8 @@ With the program.cs looking like the following:
 This project was far from complex  but it was fun to construct based upon the restrictions I had placed onto myself and understanding the core audience of the program.
 
 it is far from done, two things were not covered in this article:
-- The installer
 - how [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) was used in this project which would expand the userPrinter class
+- The installer
 
 I wanted to just give an introduction to a bit of the madness I created.
 

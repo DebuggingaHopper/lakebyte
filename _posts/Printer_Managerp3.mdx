@@ -7,21 +7,21 @@ description: Discussing how I created the installer for this project
 
 <h1 align="center">Introduction</h1>
 
-If your are reading part 3 then hopefully you have read part 1 & 2 of this project. This project started off as a way to remove a small problem for a customer.
+Congrats reader, you have survived the past two ramblings of a new Operations technician creating his very first product for a customer.
 
 Through Parts 1 & 2 I detailed how I created a C# .Net Application that utilizes two libraries [Processes](https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.process?view=net-9.0) and [prnport](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/prnport) to troubleshoot some issues on a printer, and ensuring that the user doesn't have to interact with anything else except for clicking the icon.
 
+Now we will delve into the second most frustrating part of this project...that being the Installer
+
 
 <h2 align="center">Part 3 of The Printer Troubleshooter</h2>
-
-In this article we will detail about the installer:
-- Will detail a bit of my journey with Visual Studios [Installer project](https://learn.microsoft.com/en-us/visualstudio/deployment/installer-projects-net-core?view=vs-2022)
+Ah the Installer, I used to think this was the most annoying thing to do, well wait till I write about TeamCity. But before going to that rambling, let's talk about a bit of my journey with Visual Studios [Installer project](https://learn.microsoft.com/en-us/visualstudio/deployment/installer-projects-net-core?view=vs-2022)
 
 
 
 <h3 align="center">Background Info</h3>
 
-As we detailed in Part 1 & 2, we have a config file that the application relies on for most of the work that it does so it operates independantly from user input.
+As we detailed in Part 1 & 2, we have a config file that the application relies on for most of the work that it does so it operates independently from user input.
 
 ```xml
 xml<?xml version="1.0" encoding="utf-8"?>
@@ -38,7 +38,7 @@ xml<?xml version="1.0" encoding="utf-8"?>
 </Configuration>
 ```
 
-Now this application will be going on variopus desktops, and the last thing I want is members of the team installing this application to struggle to find the config file, so i decided to make an installer.
+Now this application will be going on various desktops, and the last thing I want is members of the team installing this application to struggle to find the config file, so I decided to make an installer.
 
 Now after I made the installer I had a new found respect for those that make not only well detailed installers but also well graphically designed ones.
 
@@ -48,9 +48,9 @@ but more on that later, lets start with it!
 <h3 align="center">The installer</h3>
 
 
-Now to create the installer I used Visual Studios installer class as it creates a very barebones installer that serves our needs. Nothing fancy just gets the job done.
+Now to create the installer I used Visual Studios installer class as it creates a very bare bones installer that serves our needs. Nothing fancy just gets the job done.
 
-What isn't fancy though is the process to ensure everything is added correctly, as the we need to establish the primary output of the project, its assemblys and addiitonal files like the config 
+What isn't fancy though is the process to ensure everything is added correctly, as the we need to establish the primary output of the project, its assembly's and additional files like the config 
 
 <figure> <center> <img src="/assets/FileSystem.PNG" alt="INSTALLER_FEXPLORER" width="300" height="300" /> <figcaption> The file explorer of the Installer</figcaption> </center></figure>
 
@@ -216,7 +216,15 @@ Now for that to really work we need to add a custom action to our Installer:
 
 <h2 align="center">Conclusion</h2>
 
-Through these steps which costed me 5-6 hours of bashing my head on a hotel room desk, we were able to create a simple bare bones installer that worked......who are we kidding it never works the first time. Had to change minor things like ensuring it accepted strings, and making sure the project was built on the right framework.
+Through these steps which costed me 5-6 hours of bashing my head on a hotel room desk, we were able to create a simple bare bones installer that worked......who are we kidding it never works the first time. 
+
+I had to change minor things like ensuring it accepted strings, and making sure the project was built on the right framework.
+
+However after spending so many hours constructing the installer, testing it, and deploying it, I was so proud of what I created. you see this project was started a long time ago but it fully came to fruition while I was out on a business trip in Ohio.
+
+During that time I spent almost every day trying something, and learning so many new things that I never thought of in the past. This three part article series serves as an introduction to not only my journey as a developer but also a bit of my personal improvements, as the improvement in soft skills allowed me to see how important it was to start and finish this project.
+
+Now I hope my existential crisis paragraph didn't alarm you, in the next article I will rant, i mean document about my experience setting up a CI for this project just to learn more about DevOps(Biggest mistake I ever made)
 
 
 
