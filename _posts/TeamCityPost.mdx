@@ -1,35 +1,32 @@
 ---
-date: 2025-02-09
+date: '2025-01-07'
 thumbnail: /assets/getting-started.jpg
 title: Setting up a CI - Begginers Nightmare
 description: Discussing how I created a CI for the printer Queue Management Software
 ---
 
 <h1 align="center">Introduction</h1>
+
 Well dear reader, remember when I mentioned how creating an installer was a massive headache, I was clearly mistaken. Before I did the refactoring of the code, or even set up a gitea server for all of my projects, I created some unit tests.
 
 I would like to document how it was for a total beginner for setting up a Continuous Integration server to automatically run these tests in this new build which should always succeed.
 
 <h2 align="center">Continuous Integration</h2>
+Imagine your working on a project but instead of manually checking, and ensuring the project was built & had the expected behavior in the steps, it was all automatied
 
-
-For the reader that decided to read this as their first article of mine, god speed as your about to hear me about talk about something I still barely know enough about.
-
-Imagine you make a commit to a legacy project, now you know nothing major has changed however you want to make sure the change doesn't go downstream to something you don't expect.
-
-Continuous Integration takes the changes from the commit, pull request or merge, builds the project like a normal environment and can even run necessary tests. This ensures your changes wont't make any unexpected behaviors you could have prevented, but rather cause unexpected behaviors you'll find out way later.
+Continuous Integration takes the changes from a commit, pull request or merge, builds the project and can even run tests after building the solution without needing to lift a finger.
 
 This is where Teamcity Comes in, through teamcity you can setup what is essentially a virtual environment that builds your code, conducts tests and stores the 'artifacts' after each build. 
 
-In the grand scheme of things, setting up a continuous integration server is a bit overkill for a sole developer project. However I have been very interested recently in the past year to learn more about DevOps and how to implement it in my work.
+In the grand scheme of things, setting up a continuous integration server is a bit overkill for a solo developer project. However I have been very interested recently in the past year to learn more about DevOps and how to implement it in my work.
 
 Now if you were as foolish as I was to think this would be very simple to construct, you'd be as wrong as a monkeys a uncle.
 
 <h3 align="center">Let's Start Getting The Packages</h3>
 
-For the most part, setting up TeamCity for the first time was straightforward However, what really threw a wrench in everything was making my build step to build my C# solution. 
+For the most part, setting up TeamCity for the first time was straightforward However, what really threw a wrench in everything making my build. 
 
-You see when first creating my build, I decided to follow [this tutorial](https://www.jetbrains.com/teamcity/tutorials/tests/dotnet-build-configure-test/) initially however after some digging I realized it would be preferable to make the first step to get the nuget packages from my solution
+You see when first drafted my build, I decided to follow [this tutorial](https://www.jetbrains.com/teamcity/tutorials/tests/dotnet-build-configure-test/) initially however after some digging I realized it would be preferable to make the first step to get the nuget packages from my solution
 
 A common trend in this project was understanding what Visual Studio was doing that I took for granted, for example getting the packages and installing them onto the local machine:
 ```java
@@ -43,14 +40,14 @@ A common trend in this project was understanding what Visual Studio was doing th
         }
 ```
 
-In this step what TeamCity would be going through the solution and installing all the necessary packages that are used. Now this was very basic to implement however did the next step cause a huge headache. 
+TeamCity would be going through the solution and install the packages that are defined in the solution. Now this was very basic to implement however the next step caused a huge headache. 
 
 
 <h3 align="center">The Misconception of Builds</h3>
 
 So after getting the necessary packages installed, the next step is to then build the solution. But wait, shouldn't running the **build*** build step be enough?
 
-You see for the longest time I never once thought that when I was building my solution in Visual Studio, it was actually using msbuild from Visual Studio. By indicating **Build** I was using my local machine which did not have the necessary components to even build the solution.
+You see for the longest time I never once thought that when I was building my solution in Visual Studio, it was actually using msbuild. By indicating **Build** I was using my local machine which did not have the necessary components to even build the solution. Whoever using msbuild utilizes Visual Studios built in utility to build the solution without worrying about your environments dependencies
 
 Now how long did this take to even understand embarrassingly more than 3 hours of googling and bashing my head:
 ```java
@@ -64,13 +61,14 @@ Now how long did this take to even understand embarrassingly more than 3 hours o
         }
 ```
 
-Now the nice thing about TeamCity is that I can specify what SDK I want, you see I built my project specefcially for .NET framework 4.7, and 4.8  alongside .NET Core 8 so that can easily be modified.
+So my project was built for .NET framework  4.8 & 4.8 while the Unit tests were biilt for .NET CORE 8. I ensured this was specified in my build step while also telling TeamCity i want to ensure that there are no conflicts with my packages while also suppressing the version number in the output.
+
 
 So cool I can build my solution without much problem, but wait I want to automate my tests!
 
 <h4 align="center">The Nightmare Of Automating Tests</h4>
 
-Dear lord was this headache inducing, you see I had worked on the following test calss just to do a basic unit test:
+ I had constructed the following Unit Test to confirm that when I create the temporary batch script from the assembly, it was going to the correct path
 ```C#
 
 using LoccioniQueueManager;  
@@ -108,7 +106,7 @@ namespace LoccioniQueueManager.Test
 }
 ```
 
-Now here is where it gets fun, you see this test relies upon the Nunit Test package, and we solely want to run  LoccioniQueueManager.Test. Just like **build** if I used **test** it would give a similar issue.  So let's use VSTest:
+Now here is where it gets fun, you see this test relies upon the Nunit Test package, and we solely want to run  LoccioniQueueManager.Test. Just like **build** if I used **Test** it would give a similar issue.  So let's use VSTest:
 ```java
 dotnetVsTest { name = "TESTING" id = "dotnet_1" assemblies = """**\*_Test.csproj""" version = DotnetVsTestStep.VSTestVersion.V17 platform = DotnetVsTestStep.Platform.x64 sdk = "8" }
 ```
@@ -151,7 +149,7 @@ However remember how I just said it was using Nunit, since that is the case I am
 ```
 All it is saying is that I am using the wrong Test Runner, thanks to [net - NUnit Tests not running in TeamCity, can't figure out why - Stack Overflow](https://stackoverflow.com/questions/26345310/nunit-tests-not-running-in-teamcity-cant-figure-out-why) I was able to realize real quick all I need to do is use the Nunit Build Runner.
 
-Now sure after setting up the Nunit Build Runner you would think it would be smooth sailing, however I ran to a few issues. 
+Now after setting up the Nunit Build Runner you would think it would be smooth sailing, however I ran to a few issues. 
 
 The first was getting an error code of -100 from the buld rinner, now at first that was odd but when looking at the stack trace:
 ```
@@ -189,10 +187,10 @@ The first was getting an error code of -100 from the buld rinner, now at first t
 
 20:04:34      at NUnit.Engine.Runners.ProcessRunner.RunTests(ITestEventListener listener, TestFilter filter) in C:\Users\charlie\dev\NUnit\nunit3-console\src\NUnitEngine\nunit.engine\Runners\ProcessRunner.cs:line 138
 ```
-It became obvious that the error came from it wanting to run test that is in x86 in a .NET core that doesn't support it. So that's not a difficult thing to resolve but wait there's more.
+It became obvious that the error came from it wanting to run test that is in x86 in a .NET core that doesn't support it. This was initially confusing as I presumed that when it built my solution, it would be building my test for .NET Core 8 only. However, as always I completely took all the hard work Visual Studio does for granted,
 
-
-Then I get an error code of -2 due to invalid of dlls, this was also not difficult to resolve once I looked at the documentation of Nunit. It became clear to me that Visual Studio took away alot of the little complexities such as the following parameters in Nunit :
+By specifying in my build step to only go for this .NET Core, I was able to proceed until
+preconceiving an error code of -2 due to invalid of dlls. This was also not difficult to resolve once I looked at the documentation of Nunit. It became clear to me that Visual Studio took away alot of the little complexities such as the following parameters in Nunit :
 
 ```
 --skipnontestassemblies
@@ -202,6 +200,17 @@ Then I get an error code of -2 due to invalid of dlls, this was also not difficu
 However even though I had these parameters, I was unsuccessful in having the build to fully succeed as it still exited with error code -2 due to one legacy dll being detected from the expected behavior of the BuildRunner. 
 
 Now to overcome this I had to make it so my build would succeed even if it has an exit code of -2.
+
+
+
+<h4 align="center">The interesting aspects of Service Messages</h4>
+
+Now as I was blindly trying to figure out how to bypass the -2 exit code, I believed that forcefully telling TeamCity to make the build succeed was the ideal plan of action. After looking into the documentation of Service Messages and seeing what parameter needed to be added in Nunit, i added the following line in my UnitTest:
+
+```C#
+Console.WriteLine("##teamcity[buildStatus status='SUCCESS' text='{build.status.text} and then made green']");  
+```
+This output forces teamcity to consider the build as a success however even if this is sent to teamCity, if the following dll taken by nunit is considered by invalid or provides an error, the state reverts back to fail. This however is extremely useful if i want to allow the build to be a success even if a NUnit asserts a failure.
 
 
 <h4 align="center">Conclusion</h4>
