@@ -11,7 +11,7 @@ const Sidebar: React.FC = () => {
 <div className="min-h-screen space-y-3 h-full flex flex-col justify-center items-center w-30 text-wrap text-center text-base p-30">
 <img src="/assets/pfp.jpg" className="w-40 h-40 rounded-full" alt="PFP picture"></img>
 <p className="text-[#ffffff] font-semibold">
-  Nelson Alvarez's DevOps Blog about optimization & development
+  Nelson Alvarez's Sys Admin Archive
 </p>
           <a href="https://www.linkedin.com/in/nelson-alvarez-62027b189" className="text-[#ffffff] hover:text-[#fff6a2] font-bold">
             <IconButton>
