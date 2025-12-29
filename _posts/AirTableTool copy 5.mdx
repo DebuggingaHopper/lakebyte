@@ -1,0 +1,155 @@
+---
+date: '2025-07-05'
+thumbnail: /assets/getting-started.jpg
+title: Automating 5 minutes of work through Airtable's API
+description: Explaining how to automate the extraction of call logs for weekly excel reports
+---
+
+<h1 align="center">Introduction</h1>
+
+Take into consideration exporting call logs weekly from [AirTable](https://www.airtable.com/platform), a 5-minute task that can be an obstruction to a busy day. 
+
+Now, what's the best solution to do this? How about having a weekly routine to manually acquire this information?
+
+ What an absurd idea! It must be automated!  Thankfully, Airtbale has a built-in [API](https://airtable.com/developers/web/api/introduction) in our time of need.
+
+Today, a nifty little tool built on the .NET Framework will be detailed on how to make life much easier, and by that, it implies head bashing.
+
+<h2 align="center">The Call Log Exporter</h2>
+
+Today's ramble will detail the process of constructing the following two classes to automate weekly call log exports in an Excel sheet:
+
+- myTable: The AirTable API class
+- ExcelMaker: The Excel class that creates a custom Excel sheet
+
+
+<h3 align="center">Background Info</h3>
+
+What is there to consider for this program?
+
+1. What is the purpose? - Automate the weekly export of call logs in AirTable, ranging from last Monday to the ending Sunday
+2. Who are the end-users? - The team leads
+3. Who will see the program files? - No one
+4. What will be needed as input? - The user should not provide any input; all the necessary input is taken from the config file
+5. How often does the program run? - At the beginning of the week
+6. Are there any third-party extensions that are being relied on? - AirTables API & Microsoft Excel library
+7. What platform is this for? - Windows PC's
+
+
+<h3 align="center">Understanding The AirTable API</h3>
+
+The objective is to get a list of all the records that are before & after specific dates. 
+
+Thanks to the [documentation](https://airtable.com/developers/web/api/list-records) the AirTable Api relies on the following:
+
+- Your Airtable API Token, which can be acquired from your base, to then be used to authenticate
+- the [Base ID](https://support.airtable.com/docs/finding-airtable-ids) of your AirTable Base
+- The name of your AirTable base, think of it as a sheet in Excel.
+
+With this information, the API can send POST, GET, PATCH, and DELETE records from your base. Since the end goal is to get filtered data, AirTable has *filterByFormula*, which allows users to create custom formulas to then get filtered data.
+
+Now, what if your only exposure to filtering Airtable was through its web app? Well, thankfully [Formula Playground](https://support.airtable.com/docs/formula-field-reference) saves the day.
+
+The Formula Playground displays the desired formula functions IS_AFTER & IS_BEFORE. If the data is being collected every Monday of the week, based on last Monday to the ending Sunday, then the API formula would be:
+
+```
+AND(IS_AFTER({Date},{LAST-SUNDAY}), IS_BEFORE({Date}, {STARTING_MONDAY}))
+```
+
+Well, Jimmeney Christmas, take this formula into the postman and copy & paste into 
+
+```
+https://api/airtable.com/v0/{BASEID}/{BASE_NAME}?
+```
+
+set up the authorization with your token, and voila, the data is served on a platter!
+
+But the tool is built on the .NET framework, so the knowledge acquired will then be transferred to [airtable.net](https://github.com/ngocnicholas/airtable.net), the .NET API for AirTable.
+
+<h4 align="center">Airtable.net</h4>
+
+Well lordy, where to begin with this beautiful creature. It gets straight to the point by allowing us to create a request to the API through a base object.
+
+```C#
+            using (AirtableBase airtableBase = new AirtableBase(this.appKeyOrAccessToken, this.baseId))
+
+```
+
+Through this base object, we then create a task that runs the desired request, returning a list of dictionaries. These dictionaries being a row of data, also known as records from the airtable base.
+
+using the function ListRecords with the base name, and formula as parameters, the task returns a list of dictionaries, each one being a row of data that met the requirements of the formula. This laid the foundationf ot the mttable class
+
+```C#
+Task<AirtableListRecordsResponse> task = airtableBase.ListRecords(bName, null, null, "FORMULA");
+                    AirtableListRecordsResponse response = await task;
+
+                    if (response.Success)
+                    {
+                        records.AddRange(response.Records.ToList());
+                        offset = response.Offset;
+                    }
+                    else if (response.AirtableApiError is AirtableApiException)
+                    {
+                        errorMessage = response.AirtableApiError.ErrorMessage;
+                        if (response.AirtableApiError is AirtableInvalidRequestException)
+                        {
+                            errorMessage += "\nDetailed error message: ";
+                            errorMessage += response.AirtableApiError.DetailedErrorMessage;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        errorMessage = "Unknown error";
+                        break;
+                    }
+```
+
+
+<h3 align="center">mytable.cs the bread and butter</h3>
+
+
+```C#
+Task<AirtableListRecordsResponse> task = airtableBase.ListRecords(bName, null, null, "AND(IS_AFTER({Date},\"" + lastsunday.ToString() + "\"), IS_BEFORE({Date}, TODAY()))");
+                    AirtableListRecordsResponse response = await task;
+
+                    if (response.Success)
+                    {
+                        records.AddRange(response.Records.ToList());
+                        offset = response.Offset;
+                    }
+                    else if (response.AirtableApiError is AirtableApiException)
+                    {
+                        errorMessage = response.AirtableApiError.ErrorMessage;
+                        if (response.AirtableApiError is AirtableInvalidRequestException)
+                        {
+                            errorMessage += "\nDetailed error message: ";
+                            errorMessage += response.AirtableApiError.DetailedErrorMessage;
+                        }
+                        break;
+                    }
+                    else
+                    {
+                        errorMessage = "Unknown error";
+                        break;
+                    }
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

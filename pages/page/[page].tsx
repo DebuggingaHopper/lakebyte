@@ -1,10 +1,12 @@
-import Thumbnail from "../components/Thumbnail";
-import type { NextPage, GetStaticProps } from "next";
-import { IPost } from "../types/post";
+
+import Thumbnail from "../../components/Thumbnail";
+import type { NextPage, GetStaticProps, GetStaticPaths } from "next";
+import { IPost } from "../../types/post";
 import Link from "next/link";
-import { getPaginatedPosts } from "../utils/mdxutils";
+import { getPaginatedPosts, getTotalPages } from "../../utils/mdxutils";
 import Head from "next/head";
-import Pagination from "../components/Pagination";
+import Pagination from "../../components/Pagination";
+import { ParsedUrlQuery } from "querystring";
 
 // props type
 type Props = {
@@ -14,14 +16,18 @@ type Props = {
   totalPosts: number;
 };
 
-const POSTS_PER_PAGE = 10; // Adjust this to your preference
+const POSTS_PER_PAGE = 10; // Must match the value in index.tsx
+
+interface IParams extends ParsedUrlQuery {
+  page: string;
+}
 
 // component render function
-const Home: NextPage<Props> = ({ posts, currentPage, totalPages, totalPosts }: Props) => {
+const BlogPage: NextPage<Props> = ({ posts, currentPage, totalPages, totalPosts }: Props) => {
   return (
     <>
       <Head>
-        <title>@ECHO D@H</title>
+        <title>@ECHO D@H - Page {currentPage}</title>
         <link rel="icon" href="/favicon.png" />
         <meta name="description" content="The Resume Page of Nelson Alvarez" />
         <meta name="keywords" content="Devops,Operations,.NET" />
@@ -31,13 +37,11 @@ const Home: NextPage<Props> = ({ posts, currentPage, totalPages, totalPosts }: P
       <div>
         <div className="mb-6">
           <h1 className="text-4xl font-bold mb-4 text-slate-200 text-TitleText">
-            Recent Posts
+            Recent Posts - Page {currentPage}
           </h1>
-          {totalPages > 1 && (
-            <p className="text-Description text-sm">
-              Showing {posts.length} of {totalPosts} posts
-            </p>
-          )}
+          <p className="text-Description text-sm">
+            Showing {posts.length} of {totalPosts} posts
+          </p>
         </div>
         
         <div className="space-y-12">
@@ -56,28 +60,52 @@ const Home: NextPage<Props> = ({ posts, currentPage, totalPages, totalPosts }: P
           ))}
         </div>
 
-        {/* Only show pagination if there's more than one page */}
-        {totalPages > 1 && (
-          <Pagination 
-            currentPage={currentPage} 
-            totalPages={totalPages}
-            basePath="/"
-          />
-        )}
+        {/* Pagination */}
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages}
+          basePath="/"
+        />
       </div>
     </>
   );
 };
 
-export default Home;
+export default BlogPage;
+
+// Generate static paths for all pages
+export const getStaticPaths: GetStaticPaths = async () => {
+  const totalPages = getTotalPages(POSTS_PER_PAGE);
+  
+  // Generate paths for pages 2 through totalPages
+  // (Page 1 is handled by index.tsx)
+  const paths = Array.from({ length: totalPages - 1 }, (_, i) => ({
+    params: { page: (i + 2).toString() },
+  }));
+  
+  return {
+    paths,
+    fallback: false,
+  };
+};
 
 // get posts from serverside at build time
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async (context) => {
+  const { page } = context.params as IParams;
+  const pageNumber = Number(page) || 1;
+  
   const { posts, currentPage, totalPages, totalPosts } = getPaginatedPosts(
-    1, // Page 1 for the home page
+    pageNumber,
     POSTS_PER_PAGE,
     ["title", "slug", "date", "description", "thumbnail"]
   );
+  
+  // Redirect to 404 if page doesn't exist
+  if (posts.length === 0) {
+    return {
+      notFound: true,
+    };
+  }
   
   // return the posts props
   return { 

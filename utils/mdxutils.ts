@@ -84,23 +84,42 @@ export function getAllPosts(fields: string[]): Items []{
     return posts;
 }
 
+/**
+ * Get paginated posts
+ * @param page - Current page number (starting from 1)
+ * @param postsPerPage - Number of posts to show per page
+ * @param fields - Array of fields to retrieve from each post
+ */
+export function getPaginatedPosts(
+  page: number,
+  postsPerPage: number,
+  fields: string[] = []
+) {
+  // Get all posts using your existing getAllPosts function
+  const allPosts = getAllPosts(fields);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(allPosts.length / postsPerPage);
+  const startIndex = (page - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  
+  // Slice the posts for the current page
+  const posts = allPosts.slice(startIndex, endIndex);
+  
+  return {
+    posts,
+    currentPage: page,
+    totalPages,
+    totalPosts: allPosts.length,
+  };
+}
 
-export async function getPaginatedPosts({
-    page,
-    limit,
-  }: {
-    page: number;
-    limit: number;
-  }, fields: string[]): Promise<{ posts: Items[]; total: number }>{
-    // add paths for getting all posts 
-    const filePaths = getPostsFilePaths();
-    // get the posts from the filepaths with the needed fields sorted by date
-    const allPosts = filePaths.map((filePath) => getPostItems(filePath,fields)).sort((post1,post2) => post1.date > post2.date ? 1 : -1);
-    const paginatedPosts = allPosts.slice((page - 1) * limit, page * limit);
-    // return the available post
-    return {
-        posts: paginatedPosts,
-        total: allPosts.length,
-      };
+/**
+ * Calculate total number of pages
+ * @param postsPerPage - Number of posts per page
+ */
+export function getTotalPages(postsPerPage: number): number {
+  const allPosts = getAllPosts(['slug']); // Only get slugs for efficiency
+  return Math.ceil(allPosts.length / postsPerPage);
 }
 
